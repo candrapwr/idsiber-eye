@@ -1,0 +1,157 @@
+{
+  "info": {
+    "name": "IdSiber-Eye API",
+    "description": "Remote Android Control System API Collection",
+    "version": "1.0.0"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": ["{{base_url}}"],
+          "path": ["health"]
+        }
+      }
+    },
+    {
+      "name": "Get All Devices",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/devices",
+          "host": ["{{base_url}}"],
+          "path": ["api", "devices"]
+        }
+      }
+    },
+    {
+      "name": "Get Device Details",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/devices/{{device_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "devices", "{{device_id}}"]
+        }
+      }
+    },
+    {
+      "name": "Lock Device",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"duration\": 60\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/devices/{{device_id}}/lock",
+          "host": ["{{base_url}}"],
+          "path": ["api", "devices", "{{device_id}}", "lock"]
+        }
+      }
+    },
+    {
+      "name": "Unlock Device",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/devices/{{device_id}}/unlock",
+          "host": ["{{base_url}}"],
+          "path": ["api", "devices", "{{device_id}}", "unlock"]
+        }
+      }
+    },
+    {
+      "name": "Send Custom Command",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"block_app\",\n  \"params\": {\n    \"package_name\": \"com.instagram.android\",\n    \"duration\": 120\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/devices/{{device_id}}/command",
+          "host": ["{{base_url}}"],
+          "path": ["api", "devices", "{{device_id}}", "command"]
+        }
+      }
+    },
+    {
+      "name": "Reboot Device",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/devices/{{device_id}}/reboot",
+          "host": ["{{base_url}}"],
+          "path": ["api", "devices", "{{device_id}}", "reboot"]
+        }
+      }
+    },
+    {
+      "name": "Get Device Logs",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/devices/{{device_id}}/logs?limit=50",
+          "host": ["{{base_url}}"],
+          "path": ["api", "devices", "{{device_id}}", "logs"],
+          "query": [
+            {
+              "key": "limit",
+              "value": "50"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get All Logs",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/devices/logs/all?limit=100",
+          "host": ["{{base_url}}"],
+          "path": ["api", "devices", "logs", "all"],
+          "query": [
+            {
+              "key": "limit",
+              "value": "100"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "device_id",
+      "value": "android_device_123"
+    }
+  ]
+}

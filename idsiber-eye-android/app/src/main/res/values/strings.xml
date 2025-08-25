@@ -1,0 +1,39 @@
+<resources>
+    <string name="app_name">IdSiber-Eye</string>
+    
+    <!-- Main Activity -->
+    <string name="device_info_title">Device Information</string>
+    <string name="connection_status_title">Connection Status</string>
+    <string name="permissions_title">Permissions</string>
+    
+    <!-- Status messages -->
+    <string name="status_disconnected">Disconnected</string>
+    <string name="status_connecting">Connecting...</string>
+    <string name="status_connected">Connected ✓</string>
+    <string name="status_registered">Connected &amp; Registered ✓</string>
+    <string name="status_failed">Connection Failed</string>
+    
+    <!-- Buttons -->
+    <string name="btn_connect">Connect to Server</string>
+    <string name="btn_disconnect">Disconnect</string>
+    <string name="btn_enable_admin">Enable Device Admin</string>
+    <string name="btn_admin_enabled">Admin Enabled ✓</string>
+    
+    <!-- Messages -->
+    <string name="admin_explanation">This app needs device admin permission to lock the screen remotely for parental control.</string>
+    <string name="admin_enabled_toast">Device admin enabled successfully!</string>
+    <string name="admin_denied_toast">Device admin permission denied</string>
+    <string name="battery_optimization_disabled">Battery optimization disabled</string>
+    
+    <!-- Service -->
+    <string name="service_notification_title">IdSiber-Eye Active</string>
+    <string name="service_notification_text">Monitoring device for parental control</string>
+    <string name="service_channel_name">IdSiber-Eye Service</string>
+    <string name="service_channel_description">Keeps connection to parent device active</string>
+    
+    <!-- Errors -->
+    <string name="error_connection_failed">Connection failed</string>
+    <string name="error_registration_failed">Device registration failed</string>
+    <string name="error_command_failed">Command execution failed</string>
+    
+</resources>

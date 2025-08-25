@@ -1,0 +1,31 @@
+{
+  "name": "idsiber-eye",
+  "version": "1.0.0",
+  "description": "Remote Android Device Control System",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "init-db": "node scripts/init-db.js",
+    "test": "node scripts/test-client.js"
+  },
+  "keywords": ["android", "remote", "control", "parental"],
+  "author": "IdSiber",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2",
+    "sqlite3": "^5.1.6",
+    "cors": "^2.8.5",
+    "uuid": "^9.0.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "helmet": "^7.0.0",
+    "express-rate-limit": "^6.9.0",
+    "socket.io-client": "^4.7.2",
+    "axios": "^1.4.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
