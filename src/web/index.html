@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IdSiber Eye - Parental Control Portal</title>
+    <link rel="stylesheet" href="css/hacker-style.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                <i>📱</i> IdSiber Eye - Parental Control Portal
+            </h1>
+            <p>Kelola dan pantau perangkat Android anak Anda dari jarak jauh</p>
+            
+            <div class="status-bar">
+                <div class="status-item online">
+                    <strong>Server:</strong> <span id="server-status">Online</span>
+                </div>
+                <div class="status-item">
+                    <strong>Perangkat Terhubung:</strong> <span id="connected-devices">0</span>
+                </div>
+                <div class="status-item">
+                    <strong>Total Perangkat:</strong> <span id="total-devices">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <h3>Daftar Perangkat</h3>
+                <ul class="device-list" id="device-list">
+                    <li class="device-item">Memuat perangkat...</li>
+                </ul>
+            </div>
+
+            <div class="content-area">
+                <div class="tab-container">
+                    <div class="tabs">
+                        <div class="tab active" data-tab="control">Kontrol Perangkat</div>
+                        <div class="tab" data-tab="monitoring">Monitoring</div>
+                        <div class="tab" data-tab="apps">Manajemen Aplikasi</div>
+                        <div class="tab" data-tab="media">Media & File</div>
+                        <div class="tab" data-tab="logs">Log Aktivitas</div>
+                    <div class="tab" data-tab="advanced">Advanced Control</div>
+                    <div class="tab" data-tab="help">Help & Info</div>
+                    </div>
+
+                    <!-- Tab: Kontrol Perangkat -->
+                    <div class="tab-content active" id="tab-control">
+                        <h3>Kontrol Perangkat</h3>
+                        <div class="command-grid">
+                            <div class="command-card">
+                                <h3>🔒 Kunci Layar</h3>
+                                <p>Kunci perangkat dengan durasi tertentu</p>
+                                <div class="form-group">
+                                    <label>Durasi (menit):</label>
+                                    <input type="number" id="lock-duration" value="30" min="1" max="240">
+                                </div>
+                                <button class="btn btn-primary" onclick="sendCommand('lock_screen', {duration: $('#lock-duration').val()})">
+                                    Kunci Perangkat
+                                </button>
+                            </div>
+
+                            <div class="command-card">
+                                <h3>🔓 Buka Layar</h3>
+                                <p>Buka kunci perangkat (jika didukung)</p>
+                                <button class="btn btn-success" onclick="sendCommand('unlock_screen')">
+                                    Buka Kunci
+                                </button>
+                            </div>
+
+                            <div class="command-card">
+                                <h3>🔄 Restart</h3>
+                                <p>Restart perangkat (perlu device admin)</p>
+                                <button class="btn btn-danger" onclick="sendCommand('reboot_device')">
+                                    Restart Perangkat
+                                </button>
+                            </div>
+
+                            <div class="command-card">
+                                <h3>🔊 Kontrol Volume</h3>
+                                <p>Atur volume perangkat</p>
+                                <div class="form-group">
+                                    <label>Level Volume (0-100):</label>
+                                    <input type="range" id="volume-level" min="0" max="100" value="50">
+                                    <span id="volume-value">50%</span>
+                                </div>
+                                <button class="btn btn-primary" onclick="sendCommand('set_volume', {volume: $('#volume-level').val()})">
+                                    Set Volume
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Monitoring -->
+                    <div class="tab-content" id="tab-monitoring">
+                        <h3>Monitoring Perangkat</h3>
+                        <div class="command-grid">
+                            <div class="command-card">
+                                <h3>📊 Info Perangkat</h3>
+                                <p>Dapatkan informasi lengkap perangkat</p>
+                                <button class="btn btn-primary" onclick="sendCommand('get_device_info')">
+                                    Dapatkan Info
+                                </button>
+                            </div>
+
+                            <div class="command-card">
+                                <h3>🔋 Status Baterai</h3>
+                                <p>Pantau status baterai perangkat</p>
+                                <button class="btn btn-primary" onclick="sendCommand('get_battery_status')">
+                                    Cek Baterai
+                                </button>
+                            </div>
+
+                            <div class="command-card">
+                                <h3>📍 Lokasi</h3>
+                                <p>Dapatkan lokasi GPS perangkat</p>
+                                <button class="btn btn-primary" onclick="sendCommand('get_location')">
+                                    Dapatkan Lokasi
+                                </button>
+                            </div>
+
+                            <div class="command-card">
+                                <h3>📶 Info Jaringan</h3>
+                                <p>Informasi koneksi jaringan</p>
+                                <button class="btn btn-primary" onclick="sendCommand('get_network_info')">
+                                    Cek Jaringan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Manajemen Aplikasi -->
+                    <div class="tab-content" id="tab-apps">
+                        <h3>Manajemen Aplikasi</h3>
+                        <div class="command-grid">
+                            <div class="command-card">
+                                <h3>📦 Daftar Aplikasi</h3>
+                                <p>Lihat semua aplikasi terinstall</p>
+                                <button class="btn btn-primary" onclick="sendCommand('get_installed_apps')">
+                                    Lihat Aplikasi
+                                </button>
+                            </div>
+
+                            <div class="command-card">
+                                <h3>🚫 Blokir Aplikasi</h3>
+                                <p>Blokir aplikasi tertentu</p>
+                                <div class="form-group">
+                                    <label>Nama Package:</label>
+                                    <input type="text" id="block-app" placeholder="com.example.app">
+                                </div>
+                                <button class="btn btn-danger" onclick="sendCommand('block_app', {package_name: $('#block-app').val()})">
+                                    Blokir Aplikasi
+                                </button>
+                            </div>
+
+                            <div class="command-card">
+                                <h3>✅ Buka Blokir</h3>
+                                <p>Buka blokir aplikasi</p>
+                                <div class="form-group">
+                                    <label>Nama Package:</label>
+                                    <input type="text" id="unblock-app" placeholder="com.example.app">
+                                </div>
+                                <button class="btn btn-success" onclick="sendCommand('unblock_app', {package_name: $('#unblock-app').val()})">
+                                    Buka Blokir
+                                </button>
+                            </div>
+
+                            <div class="command-card">
+                                <h3>💥 Hentikan Aplikasi</h3>
+                                <p>Hentikan proses aplikasi</p>
+                                <div class="form-group">
+                                    <label>Nama Package:</label>
+                                    <input type="text" id="kill-app" placeholder="com.example.app">
+                                </div>
+                                <button class="btn btn-danger" onclick="sendCommand('kill_app', {package_name: $('#kill-app').val()})">
+                                    Hentikan Aplikasi
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Media & File -->
+                    <div class="tab-content" id="tab-media">
+                        <h3>Media & File Management</h3>
+                        <div class="command-grid">
+                            <div class="command-card">
+                                <h3>📷 Ambil Foto</h3>
+                                <p>Ambil foto menggunakan kamera</p>
+                                <div class="form-group">
+                                    <label>Kamera:</label>
+                                    <select id="camera-type">
+                                        <option value="back">Belakang</option>
+                                        <option value="front">Depan</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-primary" onclick="sendCommand('take_photo', {camera: $('#camera-type').val()})">
+                                    Ambil Foto
+                                </button>
+                            </div>
+
+                            <div class="command-card">
+                                <h3>🎙️ Rekam Audio</h3>
+                                <p>Rekam audio dengan durasi tertentu</p>
+                                <div class="form-group">
+                                    <label>Durasi (detik):</label>
+                                    <input type="number" id="record-duration" value="60" min="5" max="300">
+                                </div>
+                                <button class="btn btn-primary" onclick="sendCommand('start_audio_recording', {duration: $('#record-duration').val()})">
+                                    Mulai Rekam
+                                </button>
+                            </div>
+
+                            <div class="command-card">
+                                <h3>📁 List File</h3>
+                                <p>Lihat file di penyimpanan</p>
+                                <div class="form-group">
+                                    <label>Path:</label>
+                                    <input type="text" id="file-path" value="/sdcard/Download" placeholder="Path folder">
+                                </div>
+                                <button class="btn btn-primary" onclick="sendCommand('list_files', {path: $('#file-path').val()})">
+                                    List File
+                                </button>
+                            </div>
+
+                            <div class="command-card">
+                                <h3>🖥️ Screenshot</h3>
+                                <p>Ambil screenshot (perlu MediaProjection permission atau root access)</p>
+                                <div style="background: #fff3cd; color: #856404; padding: 10px; border-radius: 5px; margin-bottom: 10px; font-size: 12px;">
+                                    ⚠️ <strong>Note:</strong> Screenshot memerlukan:<br>
+                                    • Android 5+ dengan MediaProjection permission, ATAU<br>
+                                    • Device yang di-root dengan shell command access
+                                </div>
+                                <button class="btn btn-primary" onclick="sendCommand('take_screenshot')">
+                                    Coba Ambil Screenshot
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Advanced Control -->
+                    <div class="tab-content" id="tab-advanced">
+                        <h3>Advanced Device Control</h3>
+                        <div class="command-grid">
+                            <div class="command-card">
+                                <h3>✈️ Airplane Mode</h3>
+                                <p>Kontrol mode pesawat</p>
+                                <button class="btn btn-primary" onclick="sendCommand('enable_airplane_mode')">
+                                    Enable Airplane
+                                </button>
+                                <button class="btn btn-success" onclick="sendCommand('disable_airplane_mode')" style="margin-top: 10px;">
+                                    Disable Airplane
+                                </button>
+                            </div>
+
+                            <div class="command-card">
+                                <h3>🔇 Mute/Unmute</h3>
+                                <p>Kontrol audio device</p>
+                                <button class="btn btn-primary" onclick="sendCommand('mute_device')">
+                                    Mute Device
+                                </button>
+                                <button class="btn btn-success" onclick="sendCommand('unmute_device')" style="margin-top: 10px;">
+                                    Unmute Device
+                                </button>
+                            </div>
+
+                            <div class="command-card">
+                                <h3>💡 Brightness</h3>
+                                <p>Atur kecerahan layar</p>
+                                <div class="form-group">
+                                    <label>Brightness (0-100):</label>
+                                    <input type="range" id="brightness-level" min="0" max="100" value="50">
+                                    <span id="brightness-value">50%</span>
+                                </div>
+                                <button class="btn btn-primary" onclick="sendCommand('set_brightness', {brightness: $('#brightness-level').val()})">
+                                    Set Brightness
+                                </button>
+                            </div>
+
+                            <div class="command-card">
+                                <h3>⏰ Screen Timeout</h3>
+                                <p>Atur timeout layar</p>
+                                <div class="form-group">
+                                    <label>Timeout (menit):</label>
+                                    <input type="number" id="timeout-minutes" value="5" min="1" max="60">
+                                </div>
+                                <button class="btn btn-primary" onclick="sendCommand('set_screen_timeout', {timeout: $('#timeout-minutes').val()})">
+                                    Set Timeout
+                                </button>
+                            </div>
+
+                            <div class="command-card">
+                                <h3>📶 WiFi Control</h3>
+                                <p>Kontrol WiFi (Android 10+ limited)</p>
+                                <button class="btn btn-primary" onclick="sendCommand('enable_wifi')">
+                                    Enable WiFi
+                                </button>
+                                <button class="btn btn-success" onclick="sendCommand('disable_wifi')" style="margin-top: 10px;">
+                                    Disable WiFi
+                                </button>
+                            </div>
+
+                            <div class="command-card">
+                                <h3>📍 Location Services</h3>
+                                <p>Kontrol layanan lokasi</p>
+                                <button class="btn btn-primary" onclick="sendCommand('enable_location')">
+                                    Enable Location
+                                </button>
+                                <button class="btn btn-success" onclick="sendCommand('disable_location')" style="margin-top: 10px;">
+                                    Disable Location
+                                </button>
+                            </div>
+
+                            <div class="command-card">
+                                <h3>🎙️ Recording Control</h3>
+                                <p>Kontrol rekaman audio</p>
+                                <button class="btn btn-primary" onclick="sendCommand('stop_audio_recording')">
+                                    Stop Recording
+                                </button>
+                                <button class="btn btn-primary" onclick="sendCommand('get_recording_status')" style="margin-top: 10px;">
+                                    Get Status
+                                </button>
+                                <button class="btn btn-primary" onclick="sendCommand('list_recordings')" style="margin-top: 10px;">
+                                    List Recordings
+                                </button>
+                            </div>
+
+                            <div class="command-card">
+                                <h3>💾 Storage Info</h3>
+                                <p>Informasi penyimpanan device</p>
+                                <button class="btn btn-primary" onclick="sendCommand('get_storage_info')">
+                                    Get Storage Info
+                                </button>
+                            </div>
+
+                            <div class="command-card">
+                                <h3>🧠 Memory Info</h3>
+                                <p>Informasi memory device</p>
+                                <button class="btn btn-primary" onclick="sendCommand('get_memory_info')">
+                                    Get Memory Info
+                                </button>
+                            </div>
+
+                            <div class="command-card">
+                                <h3>⚙️ Running Processes</h3>
+                                <p>Lihat proses yang berjalan</p>
+                                <button class="btn btn-primary" onclick="sendCommand('get_running_processes')">
+                                    Get Processes
+                                </button>
+                            </div>
+
+                            <div class="command-card">
+                                <h3>📱 App Info</h3>
+                                <p>Informasi detail aplikasi</p>
+                                <div class="form-group">
+                                    <label>Package Name:</label>
+                                    <input type="text" id="app-info-package" placeholder="com.example.app">
+                                </div>
+                                <button class="btn btn-primary" onclick="sendCommand('get_app_info', {package_name: $('#app-info-package').val()})">
+                                    Get App Info
+                                </button>
+                            </div>
+
+                            <div class="command-card">
+                                <h3>🔔 Notifications</h3>
+                                <p>Kelola notifikasi</p>
+                                <button class="btn btn-primary" onclick="sendCommand('get_notifications')">
+                                    Get Notifications
+                                </button>
+                                <button class="btn btn-success" onclick="sendCommand('clear_notifications')" style="margin-top: 10px;">
+                                    Clear Notifications
+                                </button>
+                            </div>
+
+                            <div class="command-card">
+                                <h3>🗑️ Delete File</h3>
+                                <p>Hapus file atau folder</p>
+                                <div class="form-group">
+                                    <label>File Path:</label>
+                                    <input type="text" id="delete-file-path" placeholder="/sdcard/file.txt">
+                                </div>
+                                <button class="btn btn-danger" onclick="sendCommand('delete_file', {file_path: $('#delete-file-path').val()})">
+                                    Delete File
+                                </button>
+                            </div>
+
+                            <div class="command-card">
+                                <h3>📄 File Info</h3>
+                                <p>Informasi detail file</p>
+                                <div class="form-group">
+                                    <label>File Path:</label>
+                                    <input type="text" id="file-info-path" placeholder="/sdcard/file.txt">
+                                </div>
+                                <button class="btn btn-primary" onclick="sendCommand('get_file_info', {file_path: $('#file-info-path').val()})">
+                                    Get File Info
+                                </button>
+                            </div>
+
+                            <div class="command-card">
+                                <h3>🛑 Force Stop App</h3>
+                                <p>Force stop aplikasi</p>
+                                <div class="form-group">
+                                    <label>Package Name:</label>
+                                    <input type="text" id="force-stop-package" placeholder="com.example.app">
+                                </div>
+                                <button class="btn btn-danger" onclick="sendCommand('force_stop_app', {package_name: $('#force-stop-package').val()})">
+                                    Force Stop
+                                </button>
+                            </div>
+
+                            <div class="command-card">
+                                <h3>🚫 Disable App</h3>
+                                <p>Disable aplikasi</p>
+                                <div class="form-group">
+                                    <label>Package Name:</label>
+                                    <input type="text" id="disable-app-package" placeholder="com.example.app">
+                                </div>
+                                <button class="btn btn-danger" onclick="sendCommand('disable_app', {package_name: $('#disable-app-package').val()})">
+                                    Disable App
+                                </button>
+                            </div>
+
+                            <div class="command-card">
+                                <h3>✅ Enable App</h3>
+                                <p>Enable aplikasi</p>
+                                <div class="form-group">
+                                    <label>Package Name:</label>
+                                    <input type="text" id="enable-app-package" placeholder="com.example.app">
+                                </div>
+                                <button class="btn btn-success" onclick="sendCommand('enable_app', {package_name: $('#enable-app-package').val()})">
+                                    Enable App
+                                </button>
+                            </div>
+
+                            <div class="command-card">
+                                <h3>🧹 Clear App Data</h3>
+                                <p>Bersihkan data aplikasi</p>
+                                <div class="form-group">
+                                    <label>Package Name:</label>
+                                    <input type="text" id="clear-data-package" placeholder="com.example.app">
+                                </div>
+                                <button class="btn btn-danger" onclick="sendCommand('clear_app_data', {package_name: $('#clear-data-package').val()})">
+                                    Clear Data
+                                </button>
+                            </div>
+
+                            <div class="command-card">
+                                <h3>⚠️ Wipe Device</h3>
+                                <p>Factory reset (SANGAT BERBAHAYA)</p>
+                                <div class="form-group">
+                                    <label>Konfirmasi:</label>
+                                    <input type="text" id="wipe-confirm" placeholder="ketik 'CONFIRM'" style="border-color: red;">
+                                </div>
+                                <button class="btn btn-danger" onclick="if($('#wipe-confirm').val() === 'CONFIRM') sendCommand('wipe_device')">
+                                    WIPE DEVICE
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Help & Info -->
+                    <div class="tab-content" id="tab-help">
+                        <h3>Help & Command Information</h3>
+                        <div class="command-grid">
+                            <div class="command-card">
+                                <h3>📋 Available Commands</h3>
+                                <p>Lihat semua commands yang tersedia</p>
+                                <button class="btn btn-primary" onclick="sendCommand('get_available_commands')">
+                                    Get All Commands
+                                </button>
+                            </div>
+
+                            <div class="command-card">
+                                <h3>❓ Command Help</h3>
+                                <p>Dapatkan bantuan untuk command tertentu</p>
+                                <div class="form-group">
+                                    <label>Command Name:</label>
+                                    <input type="text" id="help-command" placeholder="lock_screen">
+                                </div>
+                                <button class="btn btn-primary" onclick="sendCommand('get_command_help', {command: $('#help-command').val()})">
+                                    Get Help
+                                </button>
+                            </div>
+
+                            <div class="command-card">
+                                <h3>ℹ️ System Information</h3>
+                                <p>Informasi tentang sistem dan API</p>
+                                <div style="padding: 15px; background: #f8f9fa; border-radius: 8px; margin-bottom: 15px;">
+                                    <strong>Total Commands Available:</strong> 50+ commands<br>
+                                    <strong>Categories:</strong> Device Control, Network, Location, Media, System Info, App Management, Personal Data, Notifications, File Management<br>
+                                    <strong>API Version:</strong> 1.0.0<br>
+                                    <strong>Android App:</strong> IdSiber Eye Parental Control
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Log Aktivitas -->
+                    <div class="tab-content" id="tab-logs">
+                        <h3>Log Aktivitas</h3>
+                        <div class="command-grid">
+                            <div class="command-card">
+                                <h3>📋 Riwayat Panggilan</h3>
+                                <p>Lihat riwayat panggilan terakhir</p>
+                                <button class="btn btn-primary" onclick="sendCommand('get_call_logs')">
+                                    Lihat Panggilan
+                                </button>
+                            </div>
+
+                            <div class="command-card">
+                                <h3>💬 SMS</h3>
+                                <p>Lihat pesan SMS</p>
+                                <button class="btn btn-primary" onclick="sendCommand('get_sms_messages')">
+                                    Lihat SMS
+                                </button>
+                            </div>
+
+                            <div class="command-card">
+                                <h3>👥 Kontak</h3>
+                                <p>Lihat daftar kontak</p>
+                                <button class="btn btn-primary" onclick="sendCommand('get_contacts')">
+                                    Lihat Kontak
+                                </button>
+                            </div>
+
+                            <div class="command-card">
+                                <h3>📊 Usage Stats</h3>
+                                <p>Statistik penggunaan aplikasi</p>
+                                <div class="form-group">
+                                    <label>Hari:</label>
+                                    <input type="number" id="usage-days" value="7" min="1" max="30">
+                                </div>
+                                <button class="btn btn-primary" onclick="sendCommand('get_usage_stats', {days: $('#usage-days').val()})">
+                                    Lihat Statistik
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="response-area" id="response-area">
+                    <div class="response-info">
+                        Response akan muncul di sini...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

@@ -6,7 +6,7 @@ module.exports = () => {
 
     // Serve portal.html as main page
     router.get('/', (req, res) => {
-        res.sendFile(path.join(__dirname, '../web/portal.html'));
+        res.sendFile(path.join(__dirname, '../web/index.html'));
     });
 
     // Serve static files from web directory
