@@ -251,7 +251,7 @@ class IdSiberEyeServer {
 // Start server
 if (require.main === module) {
     const server = new IdSiberEyeServer();
-    server.start(process.env.PORT || 3000).catch(error => {
+    server.start(process.env.PORT || 3001).catch(error => {
         console.error('❌ Failed to start server:', error);
         process.exit(1);
     });

