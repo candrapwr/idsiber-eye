@@ -1,38 +1,51 @@
 package com.idsiber.eye;
 
-import android.app.ActivityManager;
 import android.content.Context;
-import android.app.admin.DevicePolicyManager;
-import android.content.ComponentName;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
-import android.media.AudioManager;
-import android.os.BatteryManager;
-import android.os.Build;
-import android.provider.Settings;
 import android.util.Log;
 
-import org.json.JSONArray;
+import com.idsiber.eye.handlers.AppManagementHandler;
+import com.idsiber.eye.handlers.DeviceControlHandler;
+import com.idsiber.eye.handlers.FileManagementHandler;
+import com.idsiber.eye.handlers.LocationHandler;
+import com.idsiber.eye.handlers.MediaHandler;
+import com.idsiber.eye.handlers.NetworkHandler;
+import com.idsiber.eye.handlers.NotificationHandler;
+import com.idsiber.eye.handlers.PersonalDataHandler;
+import com.idsiber.eye.handlers.SystemInfoHandler;
+
 import org.json.JSONObject;
 
-import java.util.List;
-
 /**
- * Handler untuk menjalankan command yang diterima dari server
+ * Enhanced CommandHandler untuk menjalankan command yang diterima dari server
+ * Aplikasi Kontrol HP Android Anak - IdSiber Eye
+ * 
+ * Refactored dengan modular handlers untuk kemudahan maintenance
  */
 public class CommandHandler {
     private static final String TAG = "CommandHandler";
-    private Context context;
-    private DevicePolicyManager devicePolicyManager;
-    private ComponentName deviceAdminReceiver;
+    
+    // Handler instances
+    private DeviceControlHandler deviceControlHandler;
+    private NetworkHandler networkHandler;
+    private LocationHandler locationHandler;
+    private MediaHandler mediaHandler;
+    private SystemInfoHandler systemInfoHandler;
+    private AppManagementHandler appManagementHandler;
+    private PersonalDataHandler personalDataHandler;
+    private NotificationHandler notificationHandler;
+    private FileManagementHandler fileManagementHandler;
     
     public CommandHandler(Context context) {
-        this.context = context;
-        this.devicePolicyManager = (DevicePolicyManager) 
-            context.getSystemService(Context.DEVICE_POLICY_SERVICE);
-        this.deviceAdminReceiver = new ComponentName(context, IdSiberDeviceAdminReceiver.class);
+        // Initialize all handlers
+        deviceControlHandler = new DeviceControlHandler(context);
+        networkHandler = new NetworkHandler(context);
+        locationHandler = new LocationHandler(context);
+        mediaHandler = new MediaHandler(context);
+        systemInfoHandler = new SystemInfoHandler(context);
+        appManagementHandler = new AppManagementHandler(context);
+        personalDataHandler = new PersonalDataHandler(context);
+        notificationHandler = new NotificationHandler(context);
+        fileManagementHandler = new FileManagementHandler(context);
     }
     
     public CommandResult executeCommand(String action, JSONObject params) {
@@ -40,32 +53,122 @@ public class CommandHandler {
         
         try {
             switch (action) {
+                // ============= BASIC DEVICE CONTROL =============
                 case "lock_screen":
-                    return lockScreen(params);
+                    return deviceControlHandler.lockScreen(params);
                 case "unlock_screen":
-                    return unlockScreen();
+                    return deviceControlHandler.unlockScreen();
                 case "reboot_device":
-                    return rebootDevice();
+                    return deviceControlHandler.rebootDevice();
                 case "set_volume":
-                    return setVolume(params);
+                    return deviceControlHandler.setVolume(params);
+                case "mute_device":
+                    return deviceControlHandler.muteDevice();
+                case "unmute_device":
+                    return deviceControlHandler.unmuteDevice();
+                case "set_brightness":
+                    return deviceControlHandler.setBrightness(params);
+                case "set_screen_timeout":
+                    return deviceControlHandler.setScreenTimeout(params);
                 case "get_device_info":
-                    return getDeviceInfo();
+                    return deviceControlHandler.getDeviceInfo();
                 case "get_battery_status":
-                    return getBatteryStatus();
-                case "block_app":
-                    return blockApp(params);
-                case "unblock_app":
-                    return unblockApp(params);
-                case "kill_app":
-                    return killApp(params);
-                case "get_installed_apps":
-                    return getInstalledApps();
-                case "take_screenshot":
-                    return takeScreenshot();
+                    return deviceControlHandler.getBatteryStatus();
+                
+                // ============= NETWORK CONTROL =============
+                case "enable_wifi":
+                    return networkHandler.enableWifi();
+                case "disable_wifi":
+                    return networkHandler.disableWifi();
                 case "enable_airplane_mode":
-                    return enableAirplaneMode();
+                    return networkHandler.enableAirplaneMode();
                 case "disable_airplane_mode":
-                    return disableAirplaneMode();
+                    return networkHandler.disableAirplaneMode();
+                case "get_network_info":
+                    return networkHandler.getNetworkInfo();
+                
+                // ============= LOCATION SERVICES =============
+                case "get_location":
+                    return locationHandler.getLocation();
+                case "enable_location":
+                    return locationHandler.enableLocation();
+                case "disable_location":
+                    return locationHandler.disableLocation();
+                
+                // ============= MEDIA & RECORDING =============
+                case "start_audio_recording":
+                    return mediaHandler.startAudioRecording(params);
+                case "stop_audio_recording":
+                    return mediaHandler.stopAudioRecording();
+                case "take_photo":
+                    return mediaHandler.takePhoto(params);
+                case "take_screenshot":
+                    return mediaHandler.takeScreenshot();
+                case "get_recording_status":
+                    return mediaHandler.getRecordingStatus();
+                case "list_recordings":
+                    return mediaHandler.listRecordings();
+                
+                // ============= SYSTEM INFO =============
+                case "get_storage_info":
+                    return systemInfoHandler.getStorageInfo();
+                case "get_memory_info":
+                    return systemInfoHandler.getMemoryInfo();
+                case "get_usage_stats":
+                    return systemInfoHandler.getUsageStats(params);
+                case "get_running_processes":
+                    return systemInfoHandler.getRunningProcesses();
+                
+                // ============= APP MANAGEMENT =============
+                case "get_installed_apps":
+                    return appManagementHandler.getInstalledApps();
+                case "block_app":
+                    return appManagementHandler.blockApp(params);
+                case "unblock_app":
+                    return appManagementHandler.unblockApp(params);
+                case "kill_app":
+                    return appManagementHandler.killApp(params);
+                case "force_stop_app":
+                    return appManagementHandler.forceStopApp(params);
+                case "disable_app":
+                    return appManagementHandler.disableApp(params);
+                case "enable_app":
+                    return appManagementHandler.enableApp(params);
+                case "clear_app_data":
+                    return appManagementHandler.clearAppData(params);
+                case "wipe_device":
+                    return appManagementHandler.wipeDevice(params);
+                case "get_app_info":
+                    return appManagementHandler.getAppInfo(params);
+                
+                // ============= PERSONAL DATA =============
+                case "get_contacts":
+                    return personalDataHandler.getContacts();
+                case "get_call_logs":
+                    return personalDataHandler.getCallLogs();
+                case "get_sms_messages":
+                    return personalDataHandler.getSmsMessages();
+                
+                // ============= NOTIFICATION MANAGEMENT =============
+                case "get_notifications":
+                    return notificationHandler.getNotifications();
+                case "clear_notifications":
+                    return notificationHandler.clearNotifications();
+                
+                // ============= FILE MANAGEMENT =============
+                case "list_files":
+                    return fileManagementHandler.listFiles(params);
+                case "delete_file":
+                    return fileManagementHandler.deleteFile(params);
+                case "get_file_info":
+                    return fileManagementHandler.getFileInfo(params);
+                
+                // ============= COMMAND INFO =============
+                case "get_available_commands":
+                    return getAvailableCommands();
+                case "get_command_help":
+                    return getCommandHelp(params);
+                
                 default:
                     return new CommandResult(false, "Unknown command: " + action, null);
             }
@@ -75,248 +178,183 @@ public class CommandHandler {
         }
     }
     
-    private CommandResult lockScreen(JSONObject params) {
+    private CommandResult getAvailableCommands() {
         try {
-            if (devicePolicyManager.isAdminActive(deviceAdminReceiver)) {
-                devicePolicyManager.lockNow();
-                
-                int duration = 0;
-                if (params != null && params.has("duration")) {
-                    duration = params.getInt("duration");
-                    Log.d(TAG, "Screen locked for " + duration + " minutes");
-                }
-                
-                return new CommandResult(true, "Screen locked successfully" + 
-                    (duration > 0 ? " for " + duration + " minutes" : ""), null);
-            } else {
-                return new CommandResult(false, "Device admin permission required", null);
-            }
+            JSONObject commands = new JSONObject();
+            
+            // Device Control Commands
+            JSONObject deviceCommands = new JSONObject();
+            deviceCommands.put("lock_screen", "Lock device screen with optional duration");
+            deviceCommands.put("unlock_screen", "Unlock device screen (not supported)");
+            deviceCommands.put("reboot_device", "Reboot device (requires root)");
+            deviceCommands.put("set_volume", "Set device volume (0-100) with optional stream type");
+            deviceCommands.put("mute_device", "Mute all device audio streams");
+            deviceCommands.put("unmute_device", "Unmute device and restore normal volumes");
+            deviceCommands.put("set_brightness", "Set screen brightness (0-100)");
+            deviceCommands.put("set_screen_timeout", "Set screen timeout in minutes");
+            deviceCommands.put("get_device_info", "Get comprehensive device information");
+            deviceCommands.put("get_battery_status", "Get detailed battery status and health");
+            commands.put("device_control", deviceCommands);
+            
+            // Network Commands
+            JSONObject networkCommands = new JSONObject();
+            networkCommands.put("enable_wifi", "Enable WiFi (limited on Android 10+)");
+            networkCommands.put("disable_wifi", "Disable WiFi (limited on Android 10+)");
+            networkCommands.put("enable_airplane_mode", "Enable airplane mode");
+            networkCommands.put("disable_airplane_mode", "Disable airplane mode");
+            networkCommands.put("get_network_info", "Get comprehensive network information");
+            commands.put("network_control", networkCommands);
+            
+            // Location Commands
+            JSONObject locationCommands = new JSONObject();
+            locationCommands.put("get_location", "Get current GPS/Network location");
+            locationCommands.put("enable_location", "Enable location services (limited on Android 9+)");
+            locationCommands.put("disable_location", "Disable location services (limited on Android 9+)");
+            commands.put("location_services", locationCommands);
+            
+            // Media Commands
+            JSONObject mediaCommands = new JSONObject();
+            mediaCommands.put("start_audio_recording", "Start audio recording with optional duration");
+            mediaCommands.put("stop_audio_recording", "Stop current audio recording");
+            mediaCommands.put("take_photo", "Take photo with front/back camera");
+            mediaCommands.put("take_screenshot", "Take device screenshot (requires special permissions)");
+            mediaCommands.put("get_recording_status", "Get current recording status");
+            mediaCommands.put("list_recordings", "List all recorded audio files");
+            commands.put("media_recording", mediaCommands);
+            
+            // System Info Commands
+            JSONObject systemCommands = new JSONObject();
+            systemCommands.put("get_storage_info", "Get internal and external storage information");
+            systemCommands.put("get_memory_info", "Get system and app memory usage");
+            systemCommands.put("get_usage_stats", "Get app usage statistics (requires permission)");
+            systemCommands.put("get_running_processes", "Get list of running processes");
+            commands.put("system_info", systemCommands);
+            
+            // App Management Commands
+            JSONObject appCommands = new JSONObject();
+            appCommands.put("get_installed_apps", "Get list of all installed applications");
+            appCommands.put("block_app", "Block/hide application (requires device admin)");
+            appCommands.put("unblock_app", "Unblock/show application (requires device admin)");
+            appCommands.put("kill_app", "Kill background processes of an app");
+            appCommands.put("force_stop_app", "Force stop application (requires system permissions)");
+            appCommands.put("disable_app", "Disable application (requires system permissions)");
+            appCommands.put("enable_app", "Enable application (requires system permissions)");
+            appCommands.put("clear_app_data", "Clear application data (requires system permissions)");
+            appCommands.put("wipe_device", "Factory reset device (requires device admin)");
+            appCommands.put("get_app_info", "Get detailed information about specific app");
+            commands.put("app_management", appCommands);
+            
+            // Personal Data Commands
+            JSONObject personalCommands = new JSONObject();
+            personalCommands.put("get_contacts", "Get device contacts (requires permission)");
+            personalCommands.put("get_call_logs", "Get call history (requires permission)");
+            personalCommands.put("get_sms_messages", "Get SMS messages (requires permission)");
+            commands.put("personal_data", personalCommands);
+            
+            // Notification Commands
+            JSONObject notificationCommands = new JSONObject();
+            notificationCommands.put("get_notifications", "Get current notifications (requires service)");
+            notificationCommands.put("clear_notifications", "Clear app notifications");
+            commands.put("notifications", notificationCommands);
+            
+            // File Management Commands
+            JSONObject fileCommands = new JSONObject();
+            fileCommands.put("list_files", "List files in specified directory");
+            fileCommands.put("delete_file", "Delete file or directory");
+            fileCommands.put("get_file_info", "Get detailed file information");
+            commands.put("file_management", fileCommands);
+            
+            // Meta Commands
+            JSONObject metaCommands = new JSONObject();
+            metaCommands.put("get_available_commands", "Get list of all available commands");
+            metaCommands.put("get_command_help", "Get help for specific command");
+            commands.put("meta", metaCommands);
+            
+            return new CommandResult(true, "Available commands retrieved", commands.toString());
         } catch (Exception e) {
-            return new CommandResult(false, "Failed to lock screen: " + e.getMessage(), null);
+            return new CommandResult(false, "Failed to get available commands: " + e.getMessage(), null);
         }
     }
     
-    private CommandResult unlockScreen() {
-        return new CommandResult(false, "Unlock not supported by Android security policy", null);
-    }
-    
-    private CommandResult rebootDevice() {
+    private CommandResult getCommandHelp(JSONObject params) {
         try {
-            try {
-                Process process = Runtime.getRuntime().exec("su -c reboot");
-                return new CommandResult(true, "Reboot command sent (requires root)", null);
-            } catch (Exception rootError) {
-                return new CommandResult(false, "Reboot requires root access or system permissions", null);
-            }
-        } catch (Exception e) {
-            return new CommandResult(false, "Reboot failed: " + e.getMessage(), null);
-        }
-    }
-    
-    private CommandResult setVolume(JSONObject params) {
-        try {
-            AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-            if (audioManager == null) {
-                return new CommandResult(false, "AudioManager not available", null);
-            }
+            String command = params.getString("command");
+            JSONObject help = new JSONObject();
             
-            int volume = params.getInt("volume");
-            if (volume < 0 || volume > 100) {
-                return new CommandResult(false, "Volume must be between 0-100", null);
-            }
-            
-            int streamType = AudioManager.STREAM_MUSIC;
-            int maxVolume = audioManager.getStreamMaxVolume(streamType);
-            int targetVolume = (volume * maxVolume) / 100;
-            
-            audioManager.setStreamVolume(streamType, targetVolume, 0);
-            Log.d(TAG, "Volume set to " + volume + "%");
-            
-            return new CommandResult(true, "Volume set to " + volume + "%", null);
-        } catch (Exception e) {
-            return new CommandResult(false, "Failed to set volume: " + e.getMessage(), null);
-        }
-    }
-    
-    private CommandResult getDeviceInfo() {
-        try {
-            JSONObject deviceInfo = new JSONObject();
-            deviceInfo.put("device_model", Build.MODEL);
-            deviceInfo.put("device_brand", Build.BRAND);
-            deviceInfo.put("device_manufacturer", Build.MANUFACTURER);
-            deviceInfo.put("android_version", Build.VERSION.RELEASE);
-            deviceInfo.put("api_level", Build.VERSION.SDK_INT);
-            deviceInfo.put("device_id", Settings.Secure.getString(
-                context.getContentResolver(), Settings.Secure.ANDROID_ID));
-            deviceInfo.put("device_admin_active", devicePolicyManager.isAdminActive(deviceAdminReceiver));
-            
-            return new CommandResult(true, "Device info retrieved", deviceInfo.toString());
-        } catch (Exception e) {
-            return new CommandResult(false, "Failed to get device info: " + e.getMessage(), null);
-        }
-    }
-    
-    private CommandResult getBatteryStatus() {
-        try {
-            Intent batteryIntent = context.registerReceiver(null,
-                new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-            
-            if (batteryIntent == null) {
-                return new CommandResult(false, "Cannot access battery information", null);
-            }
-            
-            int level = batteryIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-            int scale = batteryIntent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-            int status = batteryIntent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-            
-            float batteryPct = level * 100 / (float) scale;
-            boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING;
-            
-            JSONObject batteryInfo = new JSONObject();
-            batteryInfo.put("battery_level", (int) batteryPct);
-            batteryInfo.put("is_charging", isCharging);
-            batteryInfo.put("status", getStatusString(status));
-            
-            return new CommandResult(true, "Battery status retrieved", batteryInfo.toString());
-        } catch (Exception e) {
-            return new CommandResult(false, "Failed to get battery status: " + e.getMessage(), null);
-        }
-    }
-    
-    private String getStatusString(int status) {
-        switch (status) {
-            case BatteryManager.BATTERY_STATUS_CHARGING: return "Charging";
-            case BatteryManager.BATTERY_STATUS_DISCHARGING: return "Discharging";
-            case BatteryManager.BATTERY_STATUS_FULL: return "Full";
-            case BatteryManager.BATTERY_STATUS_NOT_CHARGING: return "Not Charging";
-            case BatteryManager.BATTERY_STATUS_UNKNOWN: return "Unknown";
-            default: return "Unknown";
-        }
-    }
-    
-    private CommandResult blockApp(JSONObject params) {
-        try {
-            String packageName = params.getString("package_name");
-            return new CommandResult(false, "App blocking requires accessibility service or device owner permissions", null);
-        } catch (Exception e) {
-            return new CommandResult(false, "Failed to block app: " + e.getMessage(), null);
-        }
-    }
-    
-    private CommandResult unblockApp(JSONObject params) {
-        try {
-            String packageName = params.getString("package_name");
-            return new CommandResult(false, "App unblocking requires accessibility service", null);
-        } catch (Exception e) {
-            return new CommandResult(false, "Failed to unblock app: " + e.getMessage(), null);
-        }
-    }
-    
-    private CommandResult killApp(JSONObject params) {
-        try {
-            String packageName = params.getString("package_name");
-            ActivityManager activityManager = (ActivityManager) 
-                context.getSystemService(Context.ACTIVITY_SERVICE);
-            
-            if (activityManager == null) {
-                return new CommandResult(false, "ActivityManager not available", null);
-            }
-            
-            activityManager.killBackgroundProcesses(packageName);
-            Log.d(TAG, "Killed app: " + packageName);
-            return new CommandResult(true, "App terminated: " + packageName, null);
-            
-        } catch (Exception e) {
-            return new CommandResult(false, "Failed to kill app: " + e.getMessage(), null);
-        }
-    }
-    
-    private CommandResult getInstalledApps() {
-        try {
-            PackageManager pm = context.getPackageManager();
-            List<ApplicationInfo> apps = pm.getInstalledApplications(PackageManager.GET_META_DATA);
-            
-            JSONArray appList = new JSONArray();
-            int userApps = 0;
-            
-            for (ApplicationInfo app : apps) {
-                try {
-                    JSONObject appInfo = new JSONObject();
-                    appInfo.put("package_name", app.packageName);
-                    appInfo.put("app_name", pm.getApplicationLabel(app).toString());
-                    appInfo.put("is_system", (app.flags & ApplicationInfo.FLAG_SYSTEM) != 0);
-                    appInfo.put("enabled", app.enabled);
+            switch (command) {
+                case "lock_screen":
+                    help.put("description", "Lock device screen with optional duration");
+                    help.put("parameters", "duration (optional): Duration in minutes to keep screen locked");
+                    help.put("requires", "Device Admin permission");
+                    help.put("example", "{\"duration\": 30}");
+                    break;
                     
-                    appList.put(appInfo);
+                case "set_volume":
+                    help.put("description", "Set device volume for specified audio stream");
+                    help.put("parameters", "volume (required): Volume level 0-100, stream (optional): music/ring/notification/alarm/call/system");
+                    help.put("requires", "No special permissions");
+                    help.put("example", "{\"volume\": 50, \"stream\": \"music\"}");
+                    break;
                     
-                    if ((app.flags & ApplicationInfo.FLAG_SYSTEM) == 0) {
-                        userApps++;
-                    }
-                } catch (Exception appError) {
-                    Log.w(TAG, "Error processing app: " + app.packageName);
-                }
+                case "get_location":
+                    help.put("description", "Get current GPS or network-based location");
+                    help.put("parameters", "None");
+                    help.put("requires", "Location permission and location services enabled");
+                    help.put("example", "{}");
+                    break;
+                    
+                case "start_audio_recording":
+                    help.put("description", "Start audio recording with optional duration limit");
+                    help.put("parameters", "duration (optional): Maximum recording duration in seconds");
+                    help.put("requires", "Audio recording and storage permissions");
+                    help.put("example", "{\"duration\": 300}");
+                    break;
+                    
+                case "get_usage_stats":
+                    help.put("description", "Get app usage statistics for specified period");
+                    help.put("parameters", "days (optional): Number of days to look back (default 1), max_apps (optional): Maximum apps to return (default 20)");
+                    help.put("requires", "Usage stats permission");
+                    help.put("example", "{\"days\": 7, \"max_apps\": 10}");
+                    break;
+                    
+                case "block_app":
+                    help.put("description", "Block/hide specified application");
+                    help.put("parameters", "package_name (required): Package name of app to block");
+                    help.put("requires", "Device Admin or Device Owner permissions");
+                    help.put("example", "{\"package_name\": \"com.facebook.katana\"}");
+                    break;
+                    
+                case "list_files":
+                    help.put("description", "List files and directories in specified path");
+                    help.put("parameters", "path (optional): Directory path (default external storage), max_files (optional): Maximum files to return (default 100), include_hidden (optional): Include hidden files (default false)");
+                    help.put("requires", "Storage read permission");
+                    help.put("example", "{\"path\": \"/sdcard/Download\", \"max_files\": 50}");
+                    break;
+                    
+                default:
+                    return new CommandResult(false, "No help available for command: " + command, null);
             }
             
-            JSONObject result = new JSONObject();
-            result.put("apps", appList);
-            result.put("total_apps", appList.length());
-            result.put("user_apps", userApps);
-            result.put("system_apps", appList.length() - userApps);
-            
-            return new CommandResult(true, "Found " + appList.length() + " installed apps", result.toString());
-            
+            help.put("command", command);
+            return new CommandResult(true, "Help retrieved for command: " + command, help.toString());
         } catch (Exception e) {
-            return new CommandResult(false, "Failed to get installed apps: " + e.getMessage(), null);
+            return new CommandResult(false, "Failed to get command help: " + e.getMessage(), null);
         }
     }
     
-    private CommandResult takeScreenshot() {
-        return new CommandResult(false, "Screenshot requires MediaProjection permission or root access", null);
-    }
-    
-    private CommandResult enableAirplaneMode() {
+    /**
+     * Cleanup method to be called when CommandHandler is destroyed
+     */
+    public void cleanup() {
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                Settings.Global.putInt(context.getContentResolver(), 
-                    Settings.Global.AIRPLANE_MODE_ON, 1);
-            } else {
-                Settings.System.putInt(context.getContentResolver(),
-                    Settings.System.AIRPLANE_MODE_ON, 1);
+            if (locationHandler != null) {
+                locationHandler.cleanup();
             }
-            
-            Intent intent = new Intent(Intent.ACTION_AIRPLANE_MODE_CHANGED);
-            intent.putExtra("state", true);
-            context.sendBroadcast(intent);
-            
-            return new CommandResult(true, "Airplane mode enabled", null);
-            
-        } catch (SecurityException e) {
-            return new CommandResult(false, "Airplane mode control requires WRITE_SECURE_SETTINGS permission", null);
-        } catch (Exception e) {
-            return new CommandResult(false, "Failed to enable airplane mode: " + e.getMessage(), null);
-        }
-    }
-    
-    private CommandResult disableAirplaneMode() {
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                Settings.Global.putInt(context.getContentResolver(), 
-                    Settings.Global.AIRPLANE_MODE_ON, 0);
-            } else {
-                Settings.System.putInt(context.getContentResolver(),
-                    Settings.System.AIRPLANE_MODE_ON, 0);
+            if (mediaHandler != null) {
+                mediaHandler.onDestroy();
             }
-            
-            Intent intent = new Intent(Intent.ACTION_AIRPLANE_MODE_CHANGED);
-            intent.putExtra("state", false);
-            context.sendBroadcast(intent);
-            
-            return new CommandResult(true, "Airplane mode disabled", null);
-            
-        } catch (SecurityException e) {
-            return new CommandResult(false, "Airplane mode control requires WRITE_SECURE_SETTINGS permission", null);
         } catch (Exception e) {
-            return new CommandResult(false, "Failed to disable airplane mode: " + e.getMessage(), null);
+            Log.e(TAG, "Error during cleanup", e);
         }
     }
 }

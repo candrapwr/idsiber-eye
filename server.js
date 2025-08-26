@@ -239,9 +239,9 @@ class IdSiberEyeServer {
             console.log(`🚀 Server running on ${host}:${port}`);
             console.log(`📡 WebSocket server ready`);
             console.log(`💾 Database initialized`);
-            console.log(`🔗 API endpoint: http://${host === '0.0.0.0' ? '192.168.8.179' : host}:${port}`);
-            console.log(`📄 Health check: http://${host === '0.0.0.0' ? '192.168.8.179' : host}:${port}/health`);
-            console.log(`📱 Android client: http://192.168.8.179:${port}`);
+            console.log(`🔗 API endpoint: http://${host === '0.0.0.0' ? '10.88.66.40' : host}:${port}`);
+            console.log(`📄 Health check: http://${host === '0.0.0.0' ? '10.88.66.40' : host}:${port}/health`);
+            console.log(`📱 Android client: http://10.88.66.40:${port}`);
             console.log('=' .repeat(40));
             console.log('');
         });

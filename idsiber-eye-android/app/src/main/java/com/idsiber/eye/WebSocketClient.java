@@ -16,7 +16,7 @@ import org.json.JSONObject;
 
 public class WebSocketClient {
     private static final String TAG = "WebSocketClient";
-    private static final String SERVER_URL = "http://192.168.8.179:3000"; // SERVER IP
+    private static final String SERVER_URL = "http://10.88.66.40:3000"; // SERVER IP
     
     private Socket socket;
     private Context context;
