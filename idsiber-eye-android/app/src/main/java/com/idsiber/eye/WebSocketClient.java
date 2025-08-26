@@ -16,13 +16,13 @@ import org.json.JSONObject;
 
 public class WebSocketClient {
     private static final String TAG = "WebSocketClient";
-    private static final String SERVER_URL = "http://10.88.66.40:3001"; // SERVER IP
     
     private Socket socket;
     private Context context;
     private CommandHandler commandHandler;
     private StatusCallback statusCallback;
     private boolean isConnected = false;
+    private ServerConfig serverConfig;
     
     public interface StatusCallback {
         void onStatusChange(String status);
@@ -33,21 +33,24 @@ public class WebSocketClient {
         this.context = context;
         this.statusCallback = callback;
         this.commandHandler = new CommandHandler(context);
+        this.serverConfig = new ServerConfig(context);
         initSocket();
     }
     
     private void initSocket() {
         try {
+            String serverUrl = serverConfig.getServerUrl();
+            
             IO.Options options = new IO.Options();
-            options.timeout = 10000; // 10 seconds timeout
+            options.timeout = Constants.SOCKET_TIMEOUT;
             options.reconnection = true;
-            options.reconnectionAttempts = 10; // More attempts
-            options.reconnectionDelay = 2000; // 2 second delay
+            options.reconnectionAttempts = Constants.RECONNECTION_ATTEMPTS;
+            options.reconnectionDelay = Constants.RECONNECTION_DELAY;
             options.forceNew = true;
             options.transports = new String[]{"websocket", "polling"}; // Try both transport methods
             
-            Log.d(TAG, "Attempting to connect to: " + SERVER_URL);
-            socket = IO.socket(SERVER_URL, options);
+            Log.d(TAG, "Attempting to connect to: " + serverUrl);
+            socket = IO.socket(serverUrl, options);
             setupSocketListeners();
             
         } catch (URISyntaxException e) {
@@ -233,6 +236,16 @@ public class WebSocketClient {
     public void sendStatusUpdate(JSONObject status) {
         if (socket != null && socket.connected()) {
             socket.emit("status_update", status);
+        }
+    }
+    
+    /**
+     * Send notification data to server
+     */
+    public void sendNotification(JSONObject notificationData) {
+        if (socket != null && socket.connected()) {
+            socket.emit("notification_event", notificationData);
+            Log.d(TAG, "Sent notification data to server");
         }
     }
 }

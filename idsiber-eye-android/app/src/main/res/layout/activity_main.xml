@@ -119,24 +119,71 @@
             android:text="Enable Device Admin"
             android:textSize="14sp"
             android:backgroundTint="#ff9800"
+            android:textColor="@android:color/white"
+            android:layout_marginBottom="8dp" />
+            
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Notification access is required to monitor notifications"
+            android:textSize="12sp"
+            android:textColor="#666"
+            android:layout_marginBottom="8dp" />
+            
+        <Button
+            android:id="@+id/notification_btn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Enable Notification Access"
+            android:textSize="14sp"
+            android:backgroundTint="#9c27b0"
+            android:textColor="@android:color/white" />
+            
+    </LinearLayout>
+    
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@android:color/white"
+        android:padding="16dp"
+        android:layout_marginBottom="16dp"
+        android:elevation="4dp">
+        
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Server Configuration"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
+        
+        <TextView
+            android:id="@+id/server_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Server: http://10.88.66.40:3001"
+            android:textSize="12sp"
+            android:textColor="#666"
+            android:fontFamily="monospace"
+            android:layout_marginBottom="8dp" />
+        
+        <Button
+            android:id="@+id/server_config_btn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Configure Server"
+            android:textSize="14sp"
+            android:backgroundTint="#2196F3"
             android:textColor="@android:color/white" />
             
     </LinearLayout>
     
     <TextView
+        android:id="@+id/version_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Server: http://192.168.8.179:3000\nIdSiber-Eye Remote Control"
-        android:textSize="11sp"
-        android:textColor="#999"
-        android:gravity="center"
-        android:layout_marginTop="16dp"
-        android:fontFamily="monospace" />
-    
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Version 1.0.0 - IdSiber Indonesia"
+        android:text="Version 1.0.1 - IdSiber Indonesia"
         android:textSize="10sp"
         android:textColor="#ccc"
         android:gravity="center"

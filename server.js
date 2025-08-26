@@ -4,9 +4,21 @@ const socketIo = require('socket.io');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
+const dotenv = require('dotenv');
 const Database = require('./src/models/Database');
 const deviceRoutes = require('./src/routes/devices');
 const webRoutes = require('./src/routes/web');
+
+// Load environment variables
+dotenv.config();
+
+// Config constants
+const PORT = process.env.PORT || 3001;
+const HOST = process.env.HOST || '0.0.0.0';
+const SERVER_PUBLIC_IP = process.env.SERVER_PUBLIC_IP || 'localhost';
+const RATE_LIMIT_WINDOW_MS = parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000; // 15 minutes
+const RATE_LIMIT_MAX_REQUESTS = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100;
 
 class IdSiberEyeServer {
     constructor() {
@@ -49,8 +61,8 @@ class IdSiberEyeServer {
         
         // Rate limiting
         const limiter = rateLimit({
-            windowMs: 15 * 60 * 1000, // 15 minutes
-            max: 100 // limit each IP to 100 requests per windowMs
+            windowMs: RATE_LIMIT_WINDOW_MS, // from env or default 15 minutes
+            max: RATE_LIMIT_MAX_REQUESTS // limit each IP to configured requests per windowMs
         });
         this.app.use(limiter);
 
@@ -80,6 +92,73 @@ class IdSiberEyeServer {
 
         // Device routes
         this.app.use('/api/devices', deviceRoutes(this.db, this.io, this.connectedDevices));
+
+        // Notification routes
+        this.app.get('/api/notifications', async (req, res) => {
+            try {
+                const { limit = 100, package_name, device_id } = req.query;
+                
+                let notifications;
+                if (device_id) {
+                    // Get notifications for specific device
+                    notifications = await this.db.getDeviceNotifications(device_id, parseInt(limit));
+                } else if (package_name) {
+                    // Get notifications for specific package/app
+                    notifications = await this.db.getNotificationsByPackage(package_name, parseInt(limit));
+                } else {
+                    // Get all notifications
+                    notifications = await this.db.getAllNotifications(parseInt(limit));
+                }
+                
+                res.json({
+                    success: true,
+                    count: notifications.length,
+                    notifications: notifications
+                });
+            } catch (error) {
+                console.error('Error getting notifications:', error);
+                res.status(500).json({
+                    success: false,
+                    message: 'Failed to get notifications'
+                });
+            }
+        });
+        
+        this.app.delete('/api/notifications/:id', async (req, res) => {
+            try {
+                const { id } = req.params;
+                const result = await this.db.deleteNotification(id);
+                
+                res.json({
+                    success: true,
+                    deleted: result.deleted
+                });
+            } catch (error) {
+                console.error('Error deleting notification:', error);
+                res.status(500).json({
+                    success: false,
+                    message: 'Failed to delete notification'
+                });
+            }
+        });
+        
+        this.app.delete('/api/notifications/device/:deviceId', async (req, res) => {
+            try {
+                const { deviceId } = req.params;
+                const result = await this.db.clearDeviceNotifications(deviceId);
+                
+                res.json({
+                    success: true,
+                    deleted: result.deleted
+                });
+            } catch (error) {
+                console.error('Error clearing device notifications:', error);
+                res.status(500).json({
+                    success: false,
+                    message: 'Failed to clear device notifications'
+                });
+            }
+        });
 
         // Web portal routes
         this.app.use('/portal', webRoutes());
@@ -213,6 +292,34 @@ class IdSiberEyeServer {
                     console.error('Status update error:', error);
                 }
             });
+            
+            // Notification event
+            socket.on('notification_event', async (notificationData) => {
+                try {
+                    if (socket.deviceId || notificationData.device_id) {
+                        const deviceId = socket.deviceId || notificationData.device_id;
+                        
+                        // Save notification to database
+                        const result = await this.db.saveNotification(
+                            deviceId,
+                            notificationData.notification_data
+                        );
+                        
+                        console.log(`Notification saved for device ${deviceId}:`, 
+                            notificationData.notification_data.package_name);
+                        
+                        // Broadcast notification to all clients
+                        this.io.emit('real_time_update', {
+                            type: 'notification',
+                            deviceId: deviceId,
+                            notification: notificationData.notification_data,
+                            timestamp: new Date().toISOString()
+                        });
+                    }
+                } catch (error) {
+                    console.error('Notification handling error:', error);
+                }
+            });
 
             // Heartbeat untuk menjaga koneksi
             socket.on('heartbeat', () => {
@@ -243,7 +350,7 @@ class IdSiberEyeServer {
         });
     }
 
-    async start(port = 3000, host = '0.0.0.0') {
+    async start(port = PORT, host = HOST) {
         if (!this.isReady) {
             await this.init();
         }
@@ -255,9 +362,9 @@ class IdSiberEyeServer {
             console.log(`🚀 Server running on ${host}:${port}`);
             console.log(`📡 WebSocket server ready`);
             console.log(`💾 Database initialized`);
-            console.log(`🔗 API endpoint: http://${host === '0.0.0.0' ? '10.88.66.40' : host}:${port}`);
-            console.log(`📄 Health check: http://${host === '0.0.0.0' ? '10.88.66.40' : host}:${port}/health`);
-            console.log(`📱 Android client: http://10.88.66.40:${port}`);
+            console.log(`🔗 API endpoint: http://${SERVER_PUBLIC_IP}:${port}`);
+            console.log(`📄 Health check: http://${SERVER_PUBLIC_IP}:${port}/health`);
+            console.log(`📱 Android client connection: http://${SERVER_PUBLIC_IP}:${port}`);
             console.log('=' .repeat(40));
             console.log('');
         });
@@ -267,7 +374,7 @@ class IdSiberEyeServer {
 // Start server
 if (require.main === module) {
     const server = new IdSiberEyeServer();
-    server.start(process.env.PORT || 3001).catch(error => {
+    server.start().catch(error => {
         console.error('❌ Failed to start server:', error);
         process.exit(1);
     });

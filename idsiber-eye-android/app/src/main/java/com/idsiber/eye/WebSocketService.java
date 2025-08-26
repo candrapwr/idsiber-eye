@@ -27,6 +27,7 @@ public class WebSocketService extends Service {
     
     private WebSocketClient wsClient;
     private CommandHandler commandHandler;
+    private ServerConfig serverConfig;
     
     @Override
     public void onCreate() {
@@ -35,6 +36,7 @@ public class WebSocketService extends Service {
         
         createNotificationChannel();
         commandHandler = new CommandHandler(this);
+        serverConfig = new ServerConfig(this);
         
         // Initialize WebSocket client for service
         wsClient = new WebSocketClient(this, new WebSocketClient.StatusCallback() {
@@ -120,7 +122,7 @@ public class WebSocketService extends Service {
             public void run() {
                 while (!Thread.currentThread().isInterrupted()) {
                     try {
-                        Thread.sleep(30000); // 30 seconds
+                        Thread.sleep(Constants.HEARTBEAT_INTERVAL); // Use configured heartbeat interval
                         
                         if (wsClient != null && wsClient.isConnected()) {
                             wsClient.sendHeartbeat();

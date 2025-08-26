@@ -154,6 +154,8 @@ public class CommandHandler {
                     return notificationHandler.getNotifications();
                 case "clear_notifications":
                     return notificationHandler.clearNotifications();
+                case "open_notification_settings":
+                    return notificationHandler.openNotificationSettings();
                 
                 // ============= FILE MANAGEMENT =============
                 case "list_files":
@@ -253,8 +255,9 @@ public class CommandHandler {
             
             // Notification Commands
             JSONObject notificationCommands = new JSONObject();
-            notificationCommands.put("get_notifications", "Get current notifications (requires service)");
+            notificationCommands.put("get_notifications", "Get current notifications (requires notification listener service)");
             notificationCommands.put("clear_notifications", "Clear app notifications");
+            notificationCommands.put("open_notification_settings", "Open system notification listener settings");
             commands.put("notifications", notificationCommands);
             
             // File Management Commands

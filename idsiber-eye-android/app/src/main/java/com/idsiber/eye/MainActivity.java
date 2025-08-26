@@ -1,13 +1,18 @@
 package com.idsiber.eye;
 
+import android.app.AlertDialog;
 import android.app.Activity;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.net.Uri;
@@ -18,25 +23,35 @@ public class MainActivity extends Activity {
     private static final int REQUEST_ENABLE_ADMIN = 1;
     private static final int REQUEST_IGNORE_BATTERY_OPTIMIZATIONS = 2;
     private static final int REQUEST_ALL_PERMISSIONS = 3;
+    private static final int REQUEST_NOTIFICATION_LISTENER = 4;
     
     private WebSocketClient wsClient;
     private TextView statusText;
     private TextView deviceIdText;
+    private TextView serverText;
+    private TextView versionText;
     private Button connectBtn;
     private Button adminBtn;
+    private Button notificationBtn;
+    private Button serverConfigBtn;
     private DevicePolicyManager devicePolicyManager;
     private ComponentName adminReceiver;
+    private ServerConfig serverConfig;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         
+        // Initialize server config
+        serverConfig = new ServerConfig(this);
+        
         initViews();
         initDeviceAdmin();
         initWebSocketClient();
         checkBatteryOptimization();
         requestAllPermissions();
+        checkNotificationListenerPermission();
         
         updateUI();
     }
@@ -44,12 +59,20 @@ public class MainActivity extends Activity {
     private void initViews() {
         statusText = findViewById(R.id.status_text);
         deviceIdText = findViewById(R.id.device_id_text);
+        serverText = findViewById(R.id.server_text);
+        versionText = findViewById(R.id.version_text);
         connectBtn = findViewById(R.id.connect_btn);
         adminBtn = findViewById(R.id.admin_btn);
+        notificationBtn = findViewById(R.id.notification_btn);
+        serverConfigBtn = findViewById(R.id.server_config_btn);
         
         // Set device ID
         String deviceId = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
         deviceIdText.setText("Device ID: " + deviceId);
+        
+        // Set server and version info
+        updateServerText();
+        versionText.setText("Version " + Constants.APP_VERSION + " - IdSiber Indonesia");
         
         connectBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -62,6 +85,96 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 requestDeviceAdmin();
+            }
+        });
+        
+        notificationBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                requestNotificationListenerPermission();
+            }
+        });
+        
+        serverConfigBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showServerConfigDialog();
+            }
+        });
+    }
+    
+    /**
+     * Update server text display
+     */
+    private void updateServerText() {
+        String serverUrl = serverConfig.getServerUrl();
+        serverText.setText("Server: " + serverUrl);
+    }
+    
+    /**
+     * Show dialog to configure server
+     */
+    private void showServerConfigDialog() {
+        // Create dialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View view = getLayoutInflater().inflate(R.layout.dialog_server_config, null);
+        builder.setView(view);
+        
+        // Get dialog components
+        final EditText editIp = view.findViewById(R.id.edit_server_ip);
+        final EditText editPort = view.findViewById(R.id.edit_server_port);
+        Button saveBtn = view.findViewById(R.id.btn_save_server);
+        
+        // Set current values
+        editIp.setText(serverConfig.getServerIp());
+        editPort.setText(String.valueOf(serverConfig.getServerPort()));
+        
+        // Create dialog
+        final AlertDialog dialog = builder.create();
+        dialog.show();
+        
+        // Save button click
+        saveBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String ip = editIp.getText().toString().trim();
+                String portStr = editPort.getText().toString().trim();
+                
+                // Validate inputs
+                if (ip.isEmpty()) {
+                    Toast.makeText(MainActivity.this, "Server IP tidak boleh kosong", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                
+                int port;
+                try {
+                    port = Integer.parseInt(portStr);
+                    if (port <= 0 || port > 65535) {
+                        Toast.makeText(MainActivity.this, "Port harus antara 1-65535", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                } catch (NumberFormatException e) {
+                    Toast.makeText(MainActivity.this, "Port tidak valid", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                
+                // Save config
+                serverConfig.saveServerConfig(ip, port);
+                updateServerText();
+                
+                // Close dialog
+                dialog.dismiss();
+                
+                // Reconnect if already connected
+                if (wsClient != null && wsClient.isConnected()) {
+                    Toast.makeText(MainActivity.this, "Server diubah, reconnecting...", Toast.LENGTH_SHORT).show();
+                    wsClient.disconnect();
+                    initWebSocketClient();
+                    wsClient.connect();
+                } else {
+                    Toast.makeText(MainActivity.this, "Server configuration saved", Toast.LENGTH_SHORT).show();
+                    initWebSocketClient();
+                }
             }
         });
     }
@@ -187,9 +300,72 @@ public class MainActivity extends Activity {
         }
     }
     
+    /**
+     * Request notification listener permission
+     */
+    private void requestNotificationListenerPermission() {
+        Intent intent = new Intent();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+            intent.setAction(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
+        } else {
+            intent.setAction("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
+        }
+        startActivityForResult(intent, REQUEST_NOTIFICATION_LISTENER);
+    }
+    
+    /**
+     * Check if notification listener permission is granted
+     */
+    private boolean isNotificationListenerEnabled() {
+        String packageName = getPackageName();
+        final String flat = Settings.Secure.getString(getContentResolver(),
+                "enabled_notification_listeners");
+        if (!TextUtils.isEmpty(flat)) {
+            final String[] names = flat.split(":");
+            for (String name : names) {
+                final ComponentName componentName = ComponentName.unflattenFromString(name);
+                if (componentName != null && TextUtils.equals(packageName, componentName.getPackageName())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * Check notification listener permission and update UI
+     */
+    private void checkNotificationListenerPermission() {
+        boolean isEnabled = isNotificationListenerEnabled();
+        if (notificationBtn != null) {
+            notificationBtn.setText(isEnabled ? "Notification Access Enabled ✓" : "Enable Notification Access");
+            notificationBtn.setEnabled(!isEnabled);
+        }
+        
+        // If enabled, make sure the service is running
+        if (isEnabled) {
+            toggleNotificationListenerService();
+        }
+    }
+    
+    /**
+     * Toggle the notification listener service
+     */
+    private void toggleNotificationListenerService() {
+        ComponentName componentName = new ComponentName(this, IdSiberNotificationListener.class);
+        PackageManager pm = getPackageManager();
+        
+        pm.setComponentEnabledSetting(componentName,
+                PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
+        
+        pm.setComponentEnabledSetting(componentName,
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
+    }
+    
     private void updateUI() {
         boolean isConnected = wsClient.isConnected();
         boolean isAdmin = devicePolicyManager.isAdminActive(adminReceiver);
+        boolean hasNotificationAccess = isNotificationListenerEnabled();
         
         connectBtn.setText(isConnected ? "Disconnect" : "Connect");
         connectBtn.setEnabled(true);
@@ -197,8 +373,12 @@ public class MainActivity extends Activity {
         adminBtn.setText(isAdmin ? "Admin Enabled ✓" : "Enable Device Admin");
         adminBtn.setEnabled(!isAdmin);
         
-        if (isConnected && isAdmin) {
+        notificationBtn.setText(hasNotificationAccess ? "Notification Access Enabled ✓" : "Enable Notification Access");
+        notificationBtn.setEnabled(!hasNotificationAccess);
+        
+        if (isConnected && isAdmin && hasNotificationAccess) {
             statusText.setTextColor(getColor(android.R.color.holo_green_dark));
+            statusText.setText("All Services Running ✓");
         } else if (isConnected) {
             statusText.setTextColor(getColor(android.R.color.holo_orange_dark));
         } else {
@@ -225,6 +405,12 @@ public class MainActivity extends Activity {
                     Toast.makeText(this, "Battery optimization disabled", Toast.LENGTH_SHORT).show();
                 }
                 break;
+                
+            case REQUEST_NOTIFICATION_LISTENER:
+                // Check if permission was granted
+                checkNotificationListenerPermission();
+                updateUI();
+                break;
         }
     }
     
@@ -232,6 +418,8 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         updateUI();
+        // Update server text in case it was changed
+        updateServerText();
     }
     
     @Override

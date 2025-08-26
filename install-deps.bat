@@ -1,0 +1,6 @@
+@echo off
+ECHO Installing dependencies...
+npm install
+
+ECHO Restarting server...
+npm run dev

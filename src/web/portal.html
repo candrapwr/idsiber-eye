@@ -857,7 +857,9 @@
     </div>
 
     <script>
-        const SERVER_URL = 'http://localhost:3001';
+        const SERVER_URL = window.location.origin;
+        // Versi aplikasi
+        const APP_VERSION = '1.0.1';
         let selectedDeviceId = null;
         let socket = null;
 
@@ -881,6 +883,10 @@
             $('#brightness-level').on('input', function() {
                 $('#brightness-value').text($(this).val() + '%');
             });
+            
+            // Update server info dan versi dalam UI
+            $('#server-text').text(`Server: ${SERVER_URL}\nIdSiber-Eye Remote Control`);
+            $('#version-text').text(`Version ${APP_VERSION} - IdSiber Indonesia`);
 
             // Load devices
             loadDevices();
@@ -998,9 +1004,8 @@
 
         // Socket.IO connection untuk real-time updates
         function connectSocketIO() {
-            socket = io(SERVER_URL, {
-                transports: ['websocket', 'polling']
-            });
+            // Gunakan URL yang sama dengan halaman portal
+            socket = io({transports: ['websocket', 'polling']});
 
             socket.on('connect', function() {
                 console.log('Socket.IO connected');
