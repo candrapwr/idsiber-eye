@@ -31,10 +31,20 @@ public class FileManagementHandler {
 
     public CommandResult listFiles(JSONObject params) {
         try {
-            // Check storage permission
-            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) 
-                != PackageManager.PERMISSION_GRANTED) {
-                return new CommandResult(false, "Storage permission not granted", null);
+            // Check storage permission - handle Android 14+ scoped storage
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                // Android 11+ uses scoped storage - we can only access app-specific directories
+                // without special permissions
+                if (!Environment.isExternalStorageManager()) {
+                    // For Android 14+, we need to use app-specific directories or request MANAGE_EXTERNAL_STORAGE
+                    return new CommandResult(false, "Storage access requires MANAGE_EXTERNAL_STORAGE permission on Android 14+", null);
+                }
+            } else {
+                // For Android 10 and below, check traditional storage permissions
+                if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) 
+                    != PackageManager.PERMISSION_GRANTED) {
+                    return new CommandResult(false, "Storage permission not granted", null);
+                }
             }
 
             String path = params.optString("path", Environment.getExternalStorageDirectory().getAbsolutePath());

