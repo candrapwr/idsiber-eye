@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IdSiber Eye - Parental Control Portal</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <style>
         * {
             margin: 0;
@@ -594,6 +595,7 @@
     <script>
         const SERVER_URL = 'http://localhost:3001';
         let selectedDeviceId = null;
+        let socket = null;
 
         $(document).ready(function() {
             // Tab navigation
@@ -724,6 +726,55 @@
             responseArea.html(`<div class="${responseClass}">${message}</div>`);
             responseArea.scrollTop(responseArea[0].scrollHeight);
         }
+
+        // Socket.IO connection untuk real-time updates
+        function connectSocketIO() {
+            socket = io(SERVER_URL, {
+                transports: ['websocket', 'polling']
+            });
+
+            socket.on('connect', function() {
+                console.log('Socket.IO connected');
+                showResponse('info', '✅ Socket.IO connected untuk real-time updates');
+            });
+
+            socket.on('real_time_update', function(data) {
+                console.log('Real-time update:', data);
+                
+                if (data.type === 'command_response') {
+                    showResponse(data.success ? 'success' : 'error', 
+                        `🎯 REAL-TIME RESPONSE from ${data.deviceId}:<br>
+                         Action: <strong>${data.action}</strong><br>
+                         Status: ${data.success ? '✅ Success' : '❌ Failed'}<br>
+                         Message: ${data.message}<br>
+                         ${data.result ? 'Result: ' + JSON.stringify(JSON.parse(data.result), null, 2) : ''}`
+                    );
+                }
+                
+                if (data.type === 'device_status') {
+                    // Auto refresh device list ketika ada perubahan status
+                    loadDevices();
+                }
+            });
+
+            socket.on('disconnect', function() {
+                console.log('Socket.IO disconnected');
+                showResponse('info', 'Socket.IO disconnected');
+            });
+
+            socket.on('connect_error', function(error) {
+                console.error('Socket.IO connection error:', error);
+                showResponse('error', 'Socket.IO connection error: ' + error.message);
+            });
+
+            socket.on('error', function(error) {
+                console.error('Socket.IO error:', error);
+                showResponse('error', 'Socket.IO error: ' + error.message);
+            });
+        }
+
+        // Connect Socket.IO saat halaman loaded
+        connectSocketIO();
     </script>
 </body>
 </html>

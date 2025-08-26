@@ -177,6 +177,17 @@ class IdSiberEyeServer {
                             success ? 'success' : 'failed', 
                             message || result
                         );
+                        
+                        // ✅ BROADCAST REAL-TIME RESPONSE KE SEMUA CLIENT
+                        this.io.emit('real_time_update', {
+                            type: 'command_response',
+                            deviceId: socket.deviceId,
+                            action: action,
+                            success: success,
+                            message: message,
+                            result: result,
+                            timestamp: new Date().toISOString()
+                        });
                     }
                     
                     console.log(`Command response from ${socket.deviceId}:`, data);
