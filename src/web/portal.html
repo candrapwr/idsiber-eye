@@ -534,9 +534,14 @@
 
                             <div class="command-card">
                                 <h3>🖥️ Screenshot</h3>
-                                <p>Ambil screenshot (perlu permission khusus)</p>
+                                <p>Ambil screenshot (perlu MediaProjection permission atau root access)</p>
+                                <div style="background: #fff3cd; color: #856404; padding: 10px; border-radius: 5px; margin-bottom: 10px; font-size: 12px;">
+                                    ⚠️ <strong>Note:</strong> Screenshot memerlukan:<br>
+                                    • Android 5+ dengan MediaProjection permission, ATAU<br>
+                                    • Device yang di-root dengan shell command access
+                                </div>
                                 <button class="btn btn-primary" onclick="sendCommand('take_screenshot')">
-                                    Ambil Screenshot
+                                    Coba Ambil Screenshot
                                 </button>
                             </div>
                         </div>
