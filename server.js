@@ -6,6 +6,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const Database = require('./src/models/Database');
 const deviceRoutes = require('./src/routes/devices');
+const webRoutes = require('./src/routes/web');
 
 class IdSiberEyeServer {
     constructor() {
@@ -43,8 +44,8 @@ class IdSiberEyeServer {
     }
 
     initMiddleware() {
-        // Security middleware
-        this.app.use(helmet());
+        // Security middleware - Disabled for development
+        // this.app.use(helmet());
         
         // Rate limiting
         const limiter = rateLimit({
@@ -79,6 +80,10 @@ class IdSiberEyeServer {
 
         // Device routes
         this.app.use('/api/devices', deviceRoutes(this.db, this.io, this.connectedDevices));
+
+        // Web portal routes
+        this.app.use('/portal', webRoutes());
+        this.app.use('/', webRoutes());
 
         // Command routes
         this.app.post('/api/command/:deviceId', async (req, res) => {
