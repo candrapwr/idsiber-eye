@@ -1,0 +1,31 @@
+{
+  "id": "12345678-1234-1234-1234-123456789012",
+  "name": "IdSiber-Eye Environment",
+  "values": [
+    {
+      "key": "base_url",
+      "value": "http://192.168.8.179:3000",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "device_id",
+      "value": "android_device_123",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "server_host",
+      "value": "192.168.8.179",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "server_port",
+      "value": "3000",
+      "type": "default",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment"
+}

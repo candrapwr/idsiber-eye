@@ -1,157 +1,753 @@
 {
   "info": {
-    "name": "IdSiber-Eye API",
-    "description": "Remote Android Control System API Collection",
+    "_postman_id": "12345678-1234-1234-1234-123456789012",
+    "name": "IdSiber-Eye API Collection",
+    "description": "Complete API collection for IdSiber-Eye Remote Android Control System",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "version": "1.0.0"
   },
   "item": [
     {
-      "name": "Health Check",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{base_url}}/health",
-          "host": ["{{base_url}}"],
-          "path": ["health"]
-        }
-      }
-    },
-    {
-      "name": "Get All Devices",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{base_url}}/api/devices",
-          "host": ["{{base_url}}"],
-          "path": ["api", "devices"]
-        }
-      }
-    },
-    {
-      "name": "Get Device Details",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{base_url}}/api/devices/{{device_id}}",
-          "host": ["{{base_url}}"],
-          "path": ["api", "devices", "{{device_id}}"]
-        }
-      }
-    },
-    {
-      "name": "Lock Device",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"duration\": 60\n}"
+      "name": "🏥 Health & Status",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            },
+            "description": "Check if server is running and get basic status"
+          },
+          "response": []
         },
-        "url": {
-          "raw": "{{base_url}}/api/devices/{{device_id}}/lock",
-          "host": ["{{base_url}}"],
-          "path": ["api", "devices", "{{device_id}}", "lock"]
-        }
-      }
-    },
-    {
-      "name": "Unlock Device",
-      "request": {
-        "method": "POST",
-        "header": [],
-        "url": {
-          "raw": "{{base_url}}/api/devices/{{device_id}}/unlock",
-          "host": ["{{base_url}}"],
-          "path": ["api", "devices", "{{device_id}}", "unlock"]
-        }
-      }
-    },
-    {
-      "name": "Send Custom Command",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"action\": \"block_app\",\n  \"params\": {\n    \"package_name\": \"com.instagram.android\",\n    \"duration\": 120\n  }\n}"
+        {
+          "name": "Get All Devices",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/devices",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices"]
+            },
+            "description": "List all registered devices with their connection status"
+          },
+          "response": []
         },
-        "url": {
-          "raw": "{{base_url}}/api/devices/{{device_id}}/command",
-          "host": ["{{base_url}}"],
-          "path": ["api", "devices", "{{device_id}}", "command"]
+        {
+          "name": "Get Device Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/devices/{{device_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "{{device_id}}"]
+            },
+            "description": "Get detailed information about a specific device"
+          },
+          "response": []
         }
-      }
+      ]
     },
     {
-      "name": "Reboot Device",
-      "request": {
-        "method": "POST",
-        "header": [],
-        "url": {
-          "raw": "{{base_url}}/api/devices/{{device_id}}/reboot",
-          "host": ["{{base_url}}"],
-          "path": ["api", "devices", "{{device_id}}", "reboot"]
+      "name": "🔒 Device Control",
+      "item": [
+        {
+          "name": "Lock Device (60 minutes)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"duration\": 60\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/devices/{{device_id}}/lock",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "{{device_id}}", "lock"]
+            },
+            "description": "Lock device screen for specified duration in minutes"
+          },
+          "response": []
+        },
+        {
+          "name": "Lock Device (30 minutes - Study Time)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"duration\": 30\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/devices/{{device_id}}/lock",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "{{device_id}}", "lock"]
+            },
+            "description": "Lock device for study time (30 minutes)"
+          },
+          "response": []
+        },
+        {
+          "name": "Lock Device (8 hours - Bedtime)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"duration\": 480\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/devices/{{device_id}}/lock",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "{{device_id}}", "lock"]
+            },
+            "description": "Lock device for bedtime (8 hours = 480 minutes)"
+          },
+          "response": []
+        },
+        {
+          "name": "Unlock Device",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/devices/{{device_id}}/unlock",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "{{device_id}}", "unlock"]
+            },
+            "description": "Unlock device screen immediately"
+          },
+          "response": []
+        },
+        {
+          "name": "Reboot Device",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/devices/{{device_id}}/reboot",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "{{device_id}}", "reboot"]
+            },
+            "description": "Reboot the device (requires root access)"
+          },
+          "response": []
         }
-      }
+      ]
     },
     {
-      "name": "Get Device Logs",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{base_url}}/api/devices/{{device_id}}/logs?limit=50",
-          "host": ["{{base_url}}"],
-          "path": ["api", "devices", "{{device_id}}", "logs"],
-          "query": [
-            {
-              "key": "limit",
-              "value": "50"
-            }
-          ]
+      "name": "🔊 Volume Control",
+      "item": [
+        {
+          "name": "Set Volume to 0% (Silent)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"set_volume\",\n  \"params\": {\n    \"volume\": 0\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/devices/{{device_id}}/command",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "{{device_id}}", "command"]
+            },
+            "description": "Set device volume to 0% (silent mode)"
+          },
+          "response": []
+        },
+        {
+          "name": "Set Volume to 50%",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"set_volume\",\n  \"params\": {\n    \"volume\": 50\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/devices/{{device_id}}/command",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "{{device_id}}", "command"]
+            },
+            "description": "Set device volume to 50%"
+          },
+          "response": []
+        },
+        {
+          "name": "Set Volume to 100%",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"set_volume\",\n  \"params\": {\n    \"volume\": 100\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/devices/{{device_id}}/command",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "{{device_id}}", "command"]
+            },
+            "description": "Set device volume to 100%"
+          },
+          "response": []
         }
-      }
+      ]
     },
     {
-      "name": "Get All Logs",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{base_url}}/api/devices/logs/all?limit=100",
-          "host": ["{{base_url}}"],
-          "path": ["api", "devices", "logs", "all"],
-          "query": [
-            {
-              "key": "limit",
-              "value": "100"
-            }
-          ]
+      "name": "📱 App Management",
+      "item": [
+        {
+          "name": "Kill Instagram",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"kill_app\",\n  \"params\": {\n    \"package_name\": \"com.instagram.android\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/devices/{{device_id}}/command",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "{{device_id}}", "command"]
+            },
+            "description": "Force close Instagram app"
+          },
+          "response": []
+        },
+        {
+          "name": "Kill TikTok",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"kill_app\",\n  \"params\": {\n    \"package_name\": \"com.zhiliaoapp.musically\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/devices/{{device_id}}/command",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "{{device_id}}", "command"]
+            },
+            "description": "Force close TikTok app"
+          },
+          "response": []
+        },
+        {
+          "name": "Kill YouTube",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"kill_app\",\n  \"params\": {\n    \"package_name\": \"com.google.android.youtube\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/devices/{{device_id}}/command",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "{{device_id}}", "command"]
+            },
+            "description": "Force close YouTube app"
+          },
+          "response": []
+        },
+        {
+          "name": "Kill PUBG Mobile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"kill_app\",\n  \"params\": {\n    \"package_name\": \"com.pubg.krmobile\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/devices/{{device_id}}/command",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "{{device_id}}", "command"]
+            },
+            "description": "Force close PUBG Mobile game"
+          },
+          "response": []
+        },
+        {
+          "name": "Kill Mobile Legends",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"kill_app\",\n  \"params\": {\n    \"package_name\": \"com.mobile.legends\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/devices/{{device_id}}/command",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "{{device_id}}", "command"]
+            },
+            "description": "Force close Mobile Legends game"
+          },
+          "response": []
+        },
+        {
+          "name": "Kill WhatsApp",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"kill_app\",\n  \"params\": {\n    \"package_name\": \"com.whatsapp\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/devices/{{device_id}}/command",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "{{device_id}}", "command"]
+            },
+            "description": "Force close WhatsApp"
+          },
+          "response": []
         }
-      }
+      ]
+    },
+    {
+      "name": "📊 Device Information",
+      "item": [
+        {
+          "name": "Get Device Info",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"get_device_info\",\n  \"params\": {}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/devices/{{device_id}}/command",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "{{device_id}}", "command"]
+            },
+            "description": "Get device model, brand, Android version"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Battery Status",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"get_battery_status\",\n  \"params\": {}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/devices/{{device_id}}/command",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "{{device_id}}", "command"]
+            },
+            "description": "Get battery level, charging status, temperature"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Installed Apps",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"get_installed_apps\",\n  \"params\": {}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/devices/{{device_id}}/command",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "{{device_id}}", "command"]
+            },
+            "description": "Get list of all installed applications"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📶 Network Control",
+      "item": [
+        {
+          "name": "Enable Airplane Mode",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"enable_airplane_mode\",\n  \"params\": {}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/devices/{{device_id}}/command",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "{{device_id}}", "command"]
+            },
+            "description": "Enable airplane mode (disconnect all networks)"
+          },
+          "response": []
+        },
+        {
+          "name": "Disable Airplane Mode",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"disable_airplane_mode\",\n  \"params\": {}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/devices/{{device_id}}/command",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "{{device_id}}", "command"]
+            },
+            "description": "Disable airplane mode (restore network connections)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📋 Activity Logs",
+      "item": [
+        {
+          "name": "Get Device Logs (Last 20)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/devices/{{device_id}}/logs?limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "{{device_id}}", "logs"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Get last 20 activity logs for specific device"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Device Logs (Last 100)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/devices/{{device_id}}/logs?limit=100",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "{{device_id}}", "logs"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "100"
+                }
+              ]
+            },
+            "description": "Get last 100 activity logs for specific device"
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Logs (All Devices)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/devices/logs/all?limit=50",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "logs", "all"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "Get activity logs from all registered devices"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🎯 Common Scenarios",
+      "item": [
+        {
+          "name": "Study Time Mode (Block Distractions)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"duration\": 120\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/devices/{{device_id}}/lock",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "{{device_id}}", "lock"]
+            },
+            "description": "Lock device for 2 hours study time"
+          },
+          "response": []
+        },
+        {
+          "name": "Bedtime Mode (Silent + Lock)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"set_volume\",\n  \"params\": {\n    \"volume\": 0\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/devices/{{device_id}}/command",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "{{device_id}}", "command"]
+            },
+            "description": "Set volume to 0 for bedtime (follow with lock command)"
+          },
+          "response": []
+        },
+        {
+          "name": "Emergency Mode (Full Info)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"get_device_info\",\n  \"params\": {}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/devices/{{device_id}}/command",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "{{device_id}}", "command"]
+            },
+            "description": "Get full device information in emergency"
+          },
+          "response": []
+        }
+      ]
     }
   ],
   "variable": [
     {
       "key": "base_url",
-      "value": "http://localhost:3000"
+      "value": "http://192.168.8.179:3000",
+      "type": "string"
     },
     {
       "key": "device_id",
-      "value": "android_device_123"
+      "value": "android_device_123",
+      "type": "string"
     }
   ]
 }
