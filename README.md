@@ -1,4 +1,26 @@
-# 🎯 IdSiber Eye - Advanced Android Parental Control System
+<div align="center">
+
+# 🎯 IdSiber Eye
+
+**Sistem parental control Android tingkat lanjut — monitoring & manajemen perangkat secara real-time.**
+
+Dibangun dengan arsitektur enterprise-grade: backend Node.js + client Android native untuk kontrol perangkat yang andal & aman.
+
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+[![Node.js](https://img.shields.io/badge/Node.js-backend-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Android](https://img.shields.io/badge/Android-native-3DDC84?logo=android&logoColor=white)](https://developer.android.com/)
+[![Express](https://img.shields.io/badge/Express-API-000000?logo=express&logoColor=white)](https://expressjs.com/)
+[![Socket.IO](https://img.shields.io/badge/Socket.IO-realtime-010101?logo=socket.io&logoColor=white)](https://socket.io/)
+[![SQLite](https://img.shields.io/badge/SQLite-storage-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#)
+[![Status](https://img.shields.io/badge/status-aktif_maintained-success.svg)](#)
+[![Stars](https://img.shields.io/github/stars/candrapwr/idsiber-eye?style=social&label=Star)](https://github.com/candrapwr/idsiber-eye/stargazers)
+
+</div>
+
+---
+
+> 🌐 Bagian dari **Ekosistem Siber** — dibangun & dirawat oleh **dataSiberLab**.
 
 **IdSiber Eye** is a comprehensive parental control solution that enables real-time monitoring and remote management of Android devices. Built with enterprise-grade architecture featuring Node.js backend and native Android client for reliable, secure device control.
 
@@ -489,9 +511,22 @@ adb logcat -s "IdSiberEye" "WebSocketClient" "CommandHandler"
 ---
 
 ## 📄 **License**
-Proprietary - IdSiber Eye Parental Control System
+
+Dirilis di bawah **Lisensi MIT**. Lihat [LICENSE](./LICENSE).
+
+> ⚠️ **Catatan penggunaan etis:** Hanya untuk monitoring perangkat yang Anda miliki atau dengan izin sah (mis. parental control untuk anak di bawah umur). Patuhi hukum privasi lokal yang berlaku.
 
 ---
-*Last Updated: Aug 2025*  
-*Version: 1.0.1*  
+
+<div align="center">
+
+**Dibuat dengan ❤️ oleh [dataSiberLab](https://datasiber.com)**
+
+📧 [candrapwr@datasiber.com](mailto:candrapwr@datasiber.com) · 🌐 [datasiber.com](https://datasiber.com)
+
+</div>
+
+---
+*Last Updated: Aug 2025*
+*Version: 1.0.1*
 *System: Node.js + Android Native App*
