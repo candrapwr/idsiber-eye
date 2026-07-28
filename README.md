@@ -530,3 +530,5 @@ Dirilis di bawah **Lisensi MIT**. Lihat [LICENSE](./LICENSE).
 *Last Updated: Aug 2025*
 *Version: 1.0.1*
 *System: Node.js + Android Native App*
+
+<!-- repo: idsiber-eye · dataSiberLab · 2026 -->
